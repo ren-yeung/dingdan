@@ -23,12 +23,12 @@ function b64urlToStr(s) {
   return dec.decode(b64urlToBytes(s))
 }
 
-// PBKDF2-HMAC-SHA256（Workers Web Crypto 原生支持），100k 迭代
+// PBKDF2-HMAC-SHA256（Workers Web Crypto 原生支持），10k 迭代（免费Worker CPU限额~10ms）
 export async function hashPassword(pw) {
   const salt = crypto.getRandomValues(new Uint8Array(16))
   const key = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits'])
   const bits = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt, iterations: 10000, hash: 'SHA-256' },
     key, 256
   )
   return { salt: bufToB64url(salt), hash: bufToB64url(bits) }
@@ -38,7 +38,7 @@ export async function verifyPassword(pw, saltB64, hashB64) {
   const salt = b64urlToBytes(saltB64)
   const key = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits'])
   const bits = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt, iterations: 10000, hash: 'SHA-256' },
     key, 256
   )
   return bufToB64url(bits) === hashB64

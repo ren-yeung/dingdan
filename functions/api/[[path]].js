@@ -38,6 +38,13 @@ app.use('*', async (c, next) => {
 
 // ---------- 健康检查 ----------
 app.get('/health', (c) => c.json({ status: 'ok' }))
+// 调试端点（上线后删除）：查看数据库状态
+app.get('/debug/db', async (c) => {
+  const db = c.env.DB
+  const users = await all(db, 'SELECT id,username,name,role,active FROM users')
+  const products = await all(db, 'SELECT id,name FROM products')
+  return c.json({ userCount: users.length, productCount: products.length, users, products })
+})
 
 // ---------- 认证 ----------
 app.post('/login', async (c) => {
