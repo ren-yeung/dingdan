@@ -53,7 +53,7 @@
       <el-table-column prop="owner_name" label="归属" width="70" />
       <el-table-column label="状态" width="80" align="center">
         <template #default="{ row }">
-          <el-tag :type="row.status === 'active' ? 'success' : 'info'" size="small">
+          <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">
             {{ row.status === 'active' ? '合作中' : '已结束' }}
           </el-tag>
         </template>
