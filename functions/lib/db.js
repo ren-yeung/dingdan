@@ -88,14 +88,14 @@ export async function ensureSeed(db) {
     await _seed(db)
     return
   }
-  // 表非空但密码可能损坏（之前 PBKDF2 超时写入的垃圾数据）→ 验证 admin 密码
+  // 表非空但数据可能损坏（之前PBKDF2超时或active异常）→ 验证admin
   const admin = await get(db, "SELECT * FROM users WHERE username='admin'")
-  if (admin && admin.password_hash && admin.password_salt) {
+  if (admin && admin.password_hash && admin.password_salt && admin.active) {
     try {
       const { verifyPassword } = await import('./crypto.js')
       const ok = await verifyPassword('admin123', admin.password_salt, admin.password_hash)
-      if (ok) return // 种子完好，不用管
-    } catch (e) { /* 验证失败/异常 → 需要重种 */ }
+      if (ok) return // 种子完好
+    } catch (e) { /* 验证失败 → 重种 */ }
   }
   // 重种：删旧数据后重新创建
   await run(db, 'DELETE FROM users')
@@ -117,6 +117,8 @@ async function _seed(db) {
       [username, name, salt, hash, role]
     )
   }
+  // 兼容某些 D1 场景下 active 未正确写入的问题，强制设为 1
+  await run(db, 'UPDATE users SET active=1 WHERE active=0')
   await run(db, "INSERT INTO products (name,description,active) VALUES (?,?,1)", [
     'SD-WAN 专线',
     '软件定义广域网专线接入'
