@@ -45,9 +45,9 @@
           <div class="col-light">¥{{ fmt(row.monthly_rent) }}/月 · {{ row.cooperation_period }}</div>
         </template>
       </el-table-column>
-      <el-table-column label="时间" width="120">
+      <el-table-column label="合作时间" width="110">
         <template #default="{ row }">
-          <div>合作：{{ row.cooperation_date || '-' }}</div>
+          {{ row.cooperation_date || '-' }}
         </template>
       </el-table-column>
       <el-table-column label="合作国家" width="90" align="center">
