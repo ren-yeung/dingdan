@@ -24,14 +24,15 @@ function genOrderNo() {
 // ---------- 鉴权中间件 ----------
 app.use('*', async (c, next) => {
   const path = c.req.path
-  if (path === '/api/login' || path === '/api/health' || path === '/api/debug/db') return next()
+  if (path === '/api/login' || path === '/api/health' || path === '/api/debug/db' || path === '/api/debug/token') return next()
   const h = c.req.header('Authorization') || ''
   const token = h.startsWith('Bearer ') ? h.slice(7) : ''
   if (!token) return c.json({ detail: '未登录' }, 401)
   const payload = await verifyToken(token, SECRET(c.env))
   if (!payload) return c.json({ detail: '登录过期' }, 401)
   const u = await get(c.env.DB, 'SELECT * FROM users WHERE id=?', [payload.uid])
-  if (!u || !u.active) return c.json({ detail: '账号不可用' }, 403)
+  if (!u) return c.json({ detail: '账号不存在（token UID=' + payload.uid + '）', code: 'USER_NOT_FOUND' }, 403)
+  if (!u.active) return c.json({ detail: '账号已禁用（username=' + u.username + ', active=' + u.active + '）', code: 'USER_INACTIVE' }, 403)
   c.set('user', u)
   await next()
 })
@@ -43,7 +44,38 @@ app.get('/debug/db', async (c) => {
   const db = c.env.DB
   const users = await all(db, 'SELECT id,username,name,role,active FROM users')
   const products = await all(db, 'SELECT id,name FROM products')
-  return c.json({ userCount: users.length, productCount: products.length, users, products })
+  // 检查 SQLite 自增计数器
+  const seq = await get(db, "SELECT seq FROM sqlite_sequence WHERE name='users'")
+  return c.json({
+    userCount: users.length,
+    productCount: products.length,
+    users,
+    products,
+    autoincrement: seq ? seq.seq : null,
+    timestamp: new Date().toISOString()
+  })
+})
+
+// 调试端点：解析并返回当前token中的用户信息（不含密码相关）
+app.get('/debug/token', async (c) => {
+  const h = c.req.header('Authorization') || ''
+  const token = h.startsWith('Bearer ') ? h.slice(7) : ''
+  if (!token) return c.json({ error: 'No token' }, 401)
+  try {
+    const { verifyToken } = await import('../lib/crypto.js')
+    const payload = await verifyToken(token, SECRET(c.env))
+    if (!payload) return c.json({ error: 'Invalid/expired token' }, 401)
+    // 用 token 中的 UID 去查库
+    const dbUser = await get(c.env.DB, 'SELECT id,username,name,role,active FROM users WHERE id=?', [payload.uid])
+    return c.json({
+      tokenPayload: payload,
+      dbUser: dbUser || null,
+      match: !!dbUser,
+      activeOk: !!(dbUser && dbUser.active)
+    })
+  } catch (e) {
+    return c.json({ error: e.message || 'Token parse error' }, 500)
+  }
 })
 
 // ---------- 认证 ----------
