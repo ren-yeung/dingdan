@@ -126,11 +126,11 @@ function roleLabel(r) { return { admin: '管理员', manager: '销售主管', sa
 function roleType(r) { return { admin: 'danger', manager: 'warning', sales: 'success' }[r] || 'info' }
 
 async function loadUsers() {
-  const { data } = await api.get('/settings/users')
+  const { data } = await api.get('/users')
   users.value = data
 }
 async function loadProducts() {
-  const { data } = await api.get('/settings/products')
+  const { data } = await api.get('/products')
   products.value = data
 }
 onMounted(() => { loadUsers(); loadProducts() })
@@ -144,9 +144,9 @@ async function submitUser() {
   saving.value = true
   try {
     if (userForm.value.id) {
-      await api.put('/settings/users/' + userForm.value.id, userForm.value)
+      await api.put('/users/' + userForm.value.id, userForm.value)
     } else {
-      await api.post('/settings/users', userForm.value)
+      await api.post('/users', userForm.value)
     }
     ElMessage.success('已保存')
     userVisible.value = false
@@ -159,12 +159,12 @@ async function submitUser() {
 }
 async function toggleUser(row, v) {
   try {
-    await api.put('/settings/users/' + row.id, { active: v })
+    await api.put('/users/' + row.id, { active: v })
   } catch (e) { loadUsers() }
 }
 async function delUser(row) {
   await ElMessageBox.confirm('确认删除用户 ' + row.name + '？', '提示', { type: 'warning' })
-  await api.delete('/settings/users/' + row.id)
+  await api.delete('/users/' + row.id)
   ElMessage.success('已删除')
   loadUsers()
 }
@@ -177,9 +177,9 @@ async function submitProduct() {
   saving.value = true
   try {
     if (productForm.value.id) {
-      await api.put('/settings/products/' + productForm.value.id, productForm.value)
+      await api.put('/products/' + productForm.value.id, productForm.value)
     } else {
-      await api.post('/settings/products', productForm.value)
+      await api.post('/products', productForm.value)
     }
     ElMessage.success('已保存')
     productVisible.value = false
@@ -191,11 +191,11 @@ async function submitProduct() {
   }
 }
 async function toggleProduct(row, v) {
-  try { await api.put('/settings/products/' + row.id, { active: v }) } catch (e) { loadProducts() }
+  try { await api.put('/products/' + row.id, { active: v }) } catch (e) { loadProducts() }
 }
 async function delProduct(row) {
   await ElMessageBox.confirm('确认删除产品 ' + row.name + '？', '提示', { type: 'warning' })
-  await api.delete('/settings/products/' + row.id)
+  await api.delete('/products/' + row.id)
   ElMessage.success('已删除')
   loadProducts()
 }
@@ -204,7 +204,7 @@ async function changePwd() {
   if (!pwd.value.old_password || !pwd.value.new_password) { ElMessage.warning('请填写密码'); return }
   pwdSaving.value = true
   try {
-    await api.post('/settings/me/password', pwd.value)
+    await api.post('/me/password', pwd.value)
     ElMessage.success('密码已修改')
     pwd.value = { old_password: '', new_password: '' }
   } catch (e) {

@@ -294,7 +294,7 @@ async function load() {
 }
 async function loadSalesUsers() {
   if (!isAdmin.value) return
-  const { data } = await api.get('/settings/users')
+  const { data } = await api.get('/users')
   salesUsers.value = data.filter(u => u.role === 'sales')
 }
 onMounted(() => { load(); loadSalesUsers() })
