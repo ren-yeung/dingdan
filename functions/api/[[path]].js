@@ -24,7 +24,7 @@ function genOrderNo() {
 // ---------- 鉴权中间件 ----------
 app.use('*', async (c, next) => {
   const path = c.req.path
-  if (path === '/api/login' || path === '/api/health' || path === '/api/debug/db' || path === '/api/debug/token') return next()
+  if (path === '/api/login' || path === '/api/health' || path === '/api/debug/db' || path === '/api/debug/token' || path === '/api/debug/reseed') return next()
   const h = c.req.header('Authorization') || ''
   const token = h.startsWith('Bearer ') ? h.slice(7) : ''
   if (!token) return c.json({ detail: '未登录' }, 401)
@@ -81,6 +81,18 @@ app.get('/debug/token', async (c) => {
   } catch (e) {
     return c.json({ error: e.message || 'Token parse error' }, 500)
   }
+})
+
+// 手动重种子端点（紧急修复用，上线稳定后删除）
+app.post('/debug/reseed', async (c) => {
+  const db = c.env.DB
+  const { ensureSeed } = await import('../lib/db.js')
+  // 先清空再让 ensureSeed 重建
+  await run(db, 'DELETE FROM users')
+  await run(db, 'DELETE FROM products')
+  await ensureSeed(db)
+  const users = await all(db, 'SELECT id,username,name,role,active FROM users')
+  return c.json({ ok: true, reseeded: true, users })
 })
 
 // ---------- 认证 ----------

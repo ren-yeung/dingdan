@@ -81,21 +81,10 @@ export async function ensureSchema(db) {
   }
 }
 
+// 仅在表空时种子；绝不自动删重建（D1 同请求内写后读可能不一致，会导致中间件查不到用户）
 export async function ensureSeed(db) {
   const row = await get(db, 'SELECT COUNT(*) AS c FROM users')
-  // 表空 → 直接种子
-  if (!row || row.c === 0) {
-    await _seed(db)
-    return
-  }
-  // 轻量级检查：admin 存在、有密码哈希、active=1 即认为种子完好（不再每请求跑PBKDF2）
-  const admin = await get(db, "SELECT id,username,active,password_hash,password_salt FROM users WHERE username='admin'")
-  if (admin && admin.active === 1 && admin.password_hash && admin.password_salt) {
-    return // 种子完好，直接返回（不跑昂贵的PBKDF2验证）
-  }
-  // 数据异常 → 删旧重种
-  await run(db, 'DELETE FROM users')
-  await run(db, 'DELETE FROM products')
+  if (row && row.c > 0) return // 已有数据，直接返回
   await _seed(db)
 }
 
