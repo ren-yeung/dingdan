@@ -2,12 +2,18 @@ name = "yijia-erp"
 pages_build_output_dir = "frontend/dist"
 compatibility_date = "2024-11-01"
 
-# ── 重要 ───────────────────────────────────────────────
-# Git 自动部署（Cloudflare Pages）时，D1 / R2 / JWT_SECRET
-# 请全部在 Cloudflare 控制台绑定/设置，不要写死在这里：
-#   Pages 项目 → Settings → Functions → Bindings（绑定 DB→D1、BUCKET→R2）
-#   Pages 项目 → Settings → Variables（设置 JWT_SECRET，加密）
-#
-# 本地开发：用 `wrangler pages dev frontend/dist`，
-#   并在本地 .dev.vars 里提供 JWT_SECRET（D1/R2 用本地配置或真实绑定）。
-# ───────────────────────────────────────────────────────
+# Cloudflare Pages（Git 部署）会读取本文件的绑定配置。
+# D1 / R2 为公开资源标识，写在这里；JWT_SECRET 也可在
+# 控制台 Settings → Variables 设加密变量覆盖本值。
+
+[[d1_databases]]
+binding = "DB"
+database_name = "yijia-erp-db"
+database_id = "e3beec90-83bc-47a2-bc5e-09fe131634ff"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "yijia-erp-uploads"
+
+[vars]
+JWT_SECRET = "5f863cc9d8a81d3a97f7a02416d089c54a37342cf7a8269045f326b5e187f248"
