@@ -97,6 +97,7 @@ import { ref, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import api from '../api'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import auth, { setAuth } from '../store/auth'
 
 const tab = ref('users')
 const users = ref([])
@@ -133,6 +134,11 @@ async function submitUser() {
   try {
     if (userForm.value.id) {
       await api.put('/users/' + userForm.value.id, userForm.value)
+      // 如果编辑的是当前登录用户，同步更新本地缓存和顶部显示
+      if (auth.user && Number(userForm.value.id) === auth.user.id) {
+        const { data } = await api.get('/me')
+        setAuth(auth.token, data)
+      }
     } else {
       await api.post('/users', userForm.value)
     }
