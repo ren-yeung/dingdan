@@ -88,16 +88,12 @@ export async function ensureSeed(db) {
     await _seed(db)
     return
   }
-  // 表非空但数据可能损坏（之前PBKDF2超时或active异常）→ 验证admin
-  const admin = await get(db, "SELECT * FROM users WHERE username='admin'")
-  if (admin && admin.password_hash && admin.password_salt && admin.active) {
-    try {
-      const { verifyPassword } = await import('./crypto.js')
-      const ok = await verifyPassword('admin123', admin.password_salt, admin.password_hash)
-      if (ok) return // 种子完好
-    } catch (e) { /* 验证失败 → 重种 */ }
+  // 轻量级检查：admin 存在、有密码哈希、active=1 即认为种子完好（不再每请求跑PBKDF2）
+  const admin = await get(db, "SELECT id,username,active,password_hash,password_salt FROM users WHERE username='admin'")
+  if (admin && admin.active === 1 && admin.password_hash && admin.password_salt) {
+    return // 种子完好，直接返回（不跑昂贵的PBKDF2验证）
   }
-  // 重种：删旧数据后重新创建
+  // 数据异常 → 删旧重种
   await run(db, 'DELETE FROM users')
   await run(db, 'DELETE FROM products')
   await _seed(db)

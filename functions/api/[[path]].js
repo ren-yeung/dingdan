@@ -31,7 +31,12 @@ app.use('*', async (c, next) => {
   const payload = await verifyToken(token, SECRET(c.env))
   if (!payload) return c.json({ detail: '登录过期' }, 401)
   const u = await get(c.env.DB, 'SELECT * FROM users WHERE id=?', [payload.uid])
-  if (!u) return c.json({ detail: '账号不存在（token UID=' + payload.uid + '）', code: 'USER_NOT_FOUND' }, 403)
+  if (!u) {
+    // 临时调试：记录用户不存在时的完整上下文
+    const allUsers = await all(c.env.DB, 'SELECT id,username,active FROM users')
+    console.error('[AUTH] UID not found:', { uid: payload.uid, uidType: typeof payload.uid, allUsers })
+    return c.json({ detail: '账号不存在（token UID=' + payload.uid + '，当前用户数=' + allUsers.length + '）', code: 'USER_NOT_FOUND' }, 403)
+  }
   if (!u.active) return c.json({ detail: '账号已禁用（username=' + u.username + ', active=' + u.active + '）', code: 'USER_INACTIVE' }, 403)
   c.set('user', u)
   await next()
