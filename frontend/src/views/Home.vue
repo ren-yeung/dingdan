@@ -55,17 +55,12 @@
       <el-col :span="10">
         <el-card shadow="hover" header="最近商机" class="stacked">
           <el-table :data="dashboard.recent_opportunities" size="small" max-height="260">
-            <el-table-column prop="company_name" label="公司名称" show-overflow-tooltip />
-            <el-table-column label="商机时间" width="145">
+            <el-table-column label="年月日" width="150">
               <template #default="{ row }">{{ row.created_at || '-' }}</template>
             </el-table-column>
-            <el-table-column prop="owner_name" label="提交人" width="80" />
+            <el-table-column prop="submitter_name" label="提交人" width="80" />
             <el-table-column prop="bandwidth" label="带宽" width="70" />
-            <el-table-column label="状态" width="78">
-              <template #default="{ row }">
-                <el-tag size="small" :type="statusTagType(row.status)">{{ row.status_label || row.status }}</el-tag>
-              </template>
-            </el-table-column>
+            <el-table-column prop="country" label="国家" show-overflow-tooltip />
           </el-table>
         </el-card>
         <el-card shadow="hover" header="最近订单">
