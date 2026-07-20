@@ -45,9 +45,9 @@
     </el-table>
 
     <!-- 提交/编辑 对话框 -->
-    <el-dialog :title="dialogTitle" v-model="formVisible" width="680px">
-      <el-form :model="form" label-width="100px" class="opp-form">
-        <el-row :gutter="20">
+    <el-dialog :title="dialogTitle" v-model="formVisible" width="700px">
+      <el-form :model="form" label-width="90px" class="opp-form">
+        <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="公司名称" required>
               <el-input v-model="form.company_name" placeholder="测试公司名称" />
@@ -66,7 +66,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="本地运营商网络">
+            <el-form-item label="本地运营商">
               <el-input v-model="form.local_operator" placeholder="如：中国电信" />
             </el-form-item>
           </el-col>
@@ -223,7 +223,12 @@ async function loadUsers() {
   try {
     const { data } = await api.get('/users')
     // 除管理员外的所有用户（含销售主管和销售）
-    submitterOptions.value = data.filter(u => u.role !== 'admin')
+    let opts = data.filter(u => u.role !== 'admin')
+    // 确保当前登录用户自己在选项中（管理员代提交时也需要看到自己）
+    if (user.value && !opts.find(u => u.id === user.value.id)) {
+      opts.unshift({ id: user.value.id, name: user.value.name || user.value.username })
+    }
+    submitterOptions.value = opts
   } catch (e) {
     /* 非管理员无权获取用户列表时静默忽略 */
   }
@@ -300,5 +305,6 @@ async function submitReview() {
 
 <style scoped>
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.opp-form { padding-top: 8px; }
 .opp-form .el-form-item { margin-bottom: 18px; }
 </style>
