@@ -43,7 +43,7 @@ async function onSubmit() {
     if (!valid) return
     loading.value = true
     try {
-      const { data } = await api.post('/auth/login', form.value)
+      const { data } = await api.post('/login', form.value)
       setAuth(data.token, data.user)
       router.push('/home')
     } catch (e) {

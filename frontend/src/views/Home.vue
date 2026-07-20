@@ -133,8 +133,12 @@ function statusTagType(status) {
 }
 
 async function load() {
-  const { data } = await api.get('/dashboard', { params: { month: month.value } })
-  dashboard.value = data
+  try {
+    const { data } = await api.get('/dashboard', { params: { month: month.value } })
+    dashboard.value = data
+  } catch (e) {
+    // token 无效时拦截器已处理跳转，此处静默忽略
+  }
 }
 onMounted(load)
 </script>
