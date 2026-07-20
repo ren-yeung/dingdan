@@ -9,8 +9,7 @@ const publicUser = (u) => ({
   id: u.id,
   username: u.username,
   name: u.name,
-  role: u.role,
-  active: !!u.active
+  role: u.role
 })
 
 function currentMonth() {
@@ -24,29 +23,24 @@ function genOrderNo() {
 // ---------- 鉴权中间件 ----------
 app.use('*', async (c, next) => {
   const path = c.req.path
-  if (path === '/api/login' || path === '/api/health' || path === '/api/debug/db' || path === '/api/debug/token' || path === '/api/debug/reseed' || path === '/api/debug/fix') return next()
+  if (path === '/api/login' || path === '/api/health' || path === '/api/debug/db' || path === '/api/debug/token' || path === '/api/debug/reseed') return next()
   const h = c.req.header('Authorization') || ''
   const token = h.startsWith('Bearer ') ? h.slice(7) : ''
   if (!token) return c.json({ detail: '未登录' }, 401)
   const payload = await verifyToken(token, SECRET(c.env))
   if (!payload) return c.json({ detail: '登录过期' }, 401)
   const u = await get(c.env.DB, 'SELECT * FROM users WHERE id=?', [payload.uid])
-  if (!u) {
-    const allUsers = await all(c.env.DB, 'SELECT id,username,active FROM users')
-    console.error('[AUTH] UID not found:', { uid: payload.uid, uidType: typeof payload.uid, allUsers })
-    return c.json({ detail: '账号不存在（token UID=' + payload.uid + '，当前用户数=' + allUsers.length + '）', code: 'USER_NOT_FOUND' }, 403)
-  }
-  if (!u.active) return c.json({ detail: '账号已禁用（' + u.username + '）', code: 'INACTIVE' }, 403)
+  if (!u) return c.json({ detail: '账号不存在' }, 403)
   c.set('user', u)
   await next()
 })
 
 // ---------- 健康检查 ----------
-app.get('/health', (c) => c.json({ status: 'ok', version: 'v5-fix-all-active' }))
-// 调试端点（上线后删除）：查看数据库状态
+app.get('/health', (c) => c.json({ status: 'ok', version: 'v6-no-active' }))
+// 调试端点：查看数据库状态
 app.get('/debug/db', async (c) => {
   const db = c.env.DB
-  const users = await all(db, 'SELECT id,username,name,role,active FROM users')
+  const users = await all(db, 'SELECT id,username,name,role FROM users')
   const products = await all(db, 'SELECT id,name FROM products')
   // 检查 SQLite 自增计数器
   const seq = await get(db, "SELECT seq FROM sqlite_sequence WHERE name='users'")
@@ -70,23 +64,15 @@ app.get('/debug/token', async (c) => {
     const payload = await verifyToken(token, SECRET(c.env))
     if (!payload) return c.json({ error: 'Invalid/expired token' }, 401)
     // 用 token 中的 UID 去查库
-    const dbUser = await get(c.env.DB, 'SELECT id,username,name,role,active FROM users WHERE id=?', [payload.uid])
+    const dbUser = await get(c.env.DB, 'SELECT id,username,name,role FROM users WHERE id=?', [payload.uid])
     return c.json({
       tokenPayload: payload,
       dbUser: dbUser || null,
-      match: !!dbUser,
-      activeOk: !!(dbUser && dbUser.active)
+      match: !!dbUser
     })
   } catch (e) {
     return c.json({ error: e.message || 'Token parse error' }, 500)
   }
-})
-
-// 修复 D1 active=0 问题（一次性GET，稳定后删除）
-app.get('/debug/fix', async (c) => {
-  const db = c.env.DB
-  await run(db, "UPDATE users SET active=1 WHERE active!=1")
-  return c.json({ ok: true, users: await all(db, 'SELECT id,username,active FROM users') })
 })
 
 // 手动重种子端点（紧急修复用，上线稳定后删除）
@@ -97,7 +83,7 @@ app.post('/debug/reseed', async (c) => {
   await run(db, 'DELETE FROM users')
   await run(db, 'DELETE FROM products')
   await ensureSeed(db)
-  const users = await all(db, 'SELECT id,username,name,role,active FROM users')
+  const users = await all(db, 'SELECT id,username,name,role FROM users')
   return c.json({ ok: true, reseeded: true, users })
 })
 
@@ -109,7 +95,6 @@ app.post('/login', async (c) => {
   const password = (b.password || '').trim()
   const u = await get(db, 'SELECT * FROM users WHERE username=?', [username])
   if (!u) return c.json({ detail: '账号或密码错误' }, 401)
-  if (!u.active) return c.json({ detail: '账号已禁用' }, 401)
   const ok = await verifyPassword(password, u.password_salt, u.password_hash)
   if (!ok) return c.json({ detail: '账号或密码错误' }, 401)
   const token = await signToken({ uid: u.id, role: u.role, name: u.name }, SECRET(c.env))
@@ -367,7 +352,7 @@ app.get('/dashboard', async (c) => {
 // ---------- 系统设置 ----------
 app.get('/users', async (c) => {
   if (c.get('user').role !== 'admin') return c.json({ detail: '无权限' }, 403)
-  return c.json(await all(c.env.DB, 'SELECT id, username, name, role, active FROM users ORDER BY id'))
+  return c.json(await all(c.env.DB, 'SELECT id, username, name, role FROM users ORDER BY id'))
 })
 
 app.post('/users', async (c) => {
@@ -381,12 +366,10 @@ app.post('/users', async (c) => {
   if (await get(db, 'SELECT id FROM users WHERE username=?', [username]))
     return c.json({ detail: '用户名已存在' }, 400)
   const { salt, hash } = await hashPassword(password)
-  // 用 SQL 字面量写 active，避免 D1 参数绑定把布尔/JS数字存成异常值
-  const activeVal = (b.active === false) ? 0 : 1
   const res = await run(db,
-    'INSERT INTO users (username,name,password_salt,password_hash,role,active) VALUES (?,?,?,?,?,' + activeVal + ')',
+    'INSERT INTO users (username,name,password_salt,password_hash,role) VALUES (?,?,?,?,?)',
     [username, b.name || username, salt, hash, b.role])
-  return c.json({ id: res.meta.last_row_id, username, name: b.name || username, role: b.role, active: !!activeVal }, 201)
+  return c.json({ id: res.meta.last_row_id, username, name: b.name || username, role: b.role }, 201)
 })
 
 app.put('/users/:id', async (c) => {
@@ -401,8 +384,6 @@ app.put('/users/:id', async (c) => {
     if (!['admin', 'sales', 'manager'].includes(b.role)) return c.json({ detail: '角色非法' }, 400)
     sets.push('role=?'); params.push(b.role)
   }
-  // active 用 SQL 字面量，避免 D1 绑定类型问题
-  if ('active' in b) sets.push('active=' + ((b.active && b.active !== false) ? '1' : '0'))
   if (b.password) {
     const { salt, hash } = await hashPassword(b.password)
     sets.push('password_salt=?', 'password_hash=?')
@@ -424,17 +405,16 @@ app.delete('/users/:id', async (c) => {
 })
 
 app.get('/products', async (c) => {
-  return c.json(await all(c.env.DB, 'SELECT * FROM products ORDER BY id'))
+  return c.json(await all(c.env.DB, 'SELECT id, name, description FROM products ORDER BY id'))
 })
 app.post('/products', async (c) => {
   const db = c.env.DB
   if (c.get('user').role !== 'admin') return c.json({ detail: '无权限' }, 403)
   const b = await c.req.json().catch(() => ({}))
-  const activeVal = (b.active === false) ? 0 : 1
   const res = await run(db,
-    'INSERT INTO products (name,description,active) VALUES (?,?,' + activeVal + ')',
+    'INSERT INTO products (name,description) VALUES (?,?)',
     [b.name || '', b.description || ''])
-  return c.json({ id: res.meta.last_row_id, name: b.name, description: b.description, active: !!activeVal }, 201)
+  return c.json({ id: res.meta.last_row_id, name: b.name, description: b.description }, 201)
 })
 app.put('/products/:id', async (c) => {
   const db = c.env.DB
@@ -445,8 +425,6 @@ app.put('/products/:id', async (c) => {
   const params = []
   if ('name' in b) { sets.push('name=?'); params.push(b.name) }
   if ('description' in b) { sets.push('description=?'); params.push(b.description) }
-  // active 用 SQL 字面量
-  if ('active' in b) sets.push('active=' + ((b.active && b.active !== false) ? '1' : '0'))
   if (!sets.length) return c.json({ ok: true })
   params.push(id)
   await run(db, 'UPDATE products SET ' + sets.join(',') + ' WHERE id=?', params)

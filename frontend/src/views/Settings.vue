@@ -21,11 +21,6 @@
               <el-tag :type="roleType(row.role)" size="small">{{ roleLabel(row.role) }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="状态" width="90">
-            <template #default="{ row }">
-              <el-switch v-model="row.active" @change="(v) => toggleUser(row, v)" />
-            </template>
-          </el-table-column>
           <el-table-column label="操作" width="150">
             <template #default="{ row }">
               <el-button link type="warning" @click="openUser(row)">编辑</el-button>
@@ -43,11 +38,6 @@
           <el-table-column prop="id" label="ID" width="70" />
           <el-table-column prop="name" label="产品名称" width="180" />
           <el-table-column prop="description" label="描述" show-overflow-tooltip />
-          <el-table-column label="状态" width="90">
-            <template #default="{ row }">
-              <el-switch v-model="row.active" @change="(v) => toggleProduct(row, v)" />
-            </template>
-          </el-table-column>
           <el-table-column label="操作" width="150">
             <template #default="{ row }">
               <el-button link type="warning" @click="openProduct(row)">编辑</el-button>
@@ -81,7 +71,6 @@
             <el-option label="销售" value="sales" />
           </el-select>
         </el-form-item>
-        <el-form-item label="启用"><el-switch v-model="userForm.active" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="userVisible = false">取消</el-button>
@@ -94,7 +83,6 @@
       <el-form :model="productForm" label-width="90px">
         <el-form-item label="产品名称"><el-input v-model="productForm.name" /></el-form-item>
         <el-form-item label="描述"><el-input v-model="productForm.description" type="textarea" :rows="3" /></el-form-item>
-        <el-form-item label="启用"><el-switch v-model="productForm.active" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="productVisible = false">取消</el-button>
@@ -117,9 +105,9 @@ const saving = ref(false)
 const pwdSaving = ref(false)
 
 const userVisible = ref(false)
-const userForm = ref({ id: null, username: '', name: '', password: '', role: 'sales', active: true })
+const userForm = ref({ id: null, username: '', name: '', password: '', role: 'sales' })
 const productVisible = ref(false)
-const productForm = ref({ id: null, name: '', description: '', active: true })
+const productForm = ref({ id: null, name: '', description: '' })
 const pwd = ref({ old_password: '', new_password: '' })
 
 function roleLabel(r) { return { admin: '管理员', manager: '销售主管', sales: '销售' }[r] || r }
@@ -136,7 +124,7 @@ async function loadProducts() {
 onMounted(() => { loadUsers(); loadProducts() })
 
 function openUser(row) {
-  userForm.value = row ? { ...row, password: '' } : { id: null, username: '', name: '', password: '', role: 'sales', active: true }
+  userForm.value = row ? { ...row, password: '' } : { id: null, username: '', name: '', password: '', role: 'sales' }
   userVisible.value = true
 }
 async function submitUser() {
@@ -157,11 +145,6 @@ async function submitUser() {
     saving.value = false
   }
 }
-async function toggleUser(row, v) {
-  try {
-    await api.put('/users/' + row.id, { active: v })
-  } catch (e) { loadUsers() }
-}
 async function delUser(row) {
   await ElMessageBox.confirm('确认删除用户 ' + row.name + '？', '提示', { type: 'warning' })
   await api.delete('/users/' + row.id)
@@ -170,7 +153,7 @@ async function delUser(row) {
 }
 
 function openProduct(row) {
-  productForm.value = row ? { ...row } : { id: null, name: '', description: '', active: true }
+  productForm.value = row ? { ...row } : { id: null, name: '', description: '' }
   productVisible.value = true
 }
 async function submitProduct() {
@@ -189,9 +172,6 @@ async function submitProduct() {
   } finally {
     saving.value = false
   }
-}
-async function toggleProduct(row, v) {
-  try { await api.put('/products/' + row.id, { active: v }) } catch (e) { loadProducts() }
 }
 async function delProduct(row) {
   await ElMessageBox.confirm('确认删除产品 ' + row.name + '？', '提示', { type: 'warning' })

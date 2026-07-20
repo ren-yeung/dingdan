@@ -20,8 +20,7 @@ const SCHEMA_STMTS = [
     name TEXT NOT NULL DEFAULT '',
     password_salt TEXT NOT NULL DEFAULT '',
     password_hash TEXT NOT NULL DEFAULT '',
-    role TEXT NOT NULL DEFAULT 'sales',
-    active INTEGER NOT NULL DEFAULT 1
+    role TEXT NOT NULL DEFAULT 'sales'
   )`,
   `CREATE TABLE IF NOT EXISTS opportunities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,8 +65,7 @@ const SCHEMA_STMTS = [
   `CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL DEFAULT '',
-    description TEXT NOT NULL DEFAULT '',
-    active INTEGER NOT NULL DEFAULT 1
+    description TEXT NOT NULL DEFAULT ''
   )`,
   `CREATE INDEX IF NOT EXISTS idx_opp_submitter ON opportunities(submitter_id)`,
   `CREATE INDEX IF NOT EXISTS idx_opp_status ON opportunities(status)`,
@@ -78,6 +76,11 @@ const SCHEMA_STMTS = [
 export async function ensureSchema(db) {
   for (const s of SCHEMA_STMTS) {
     await db.prepare(s).run()
+  }
+  // 清理旧版本遗留的 active 列（账号禁用功能已移除）
+  for (const t of ['users', 'products']) {
+    try { await db.prepare('ALTER TABLE ' + t + ' DROP COLUMN active').run() }
+    catch (e) { /* 列不存在或 D1 不支持则忽略 */ }
   }
 }
 
@@ -96,16 +99,13 @@ async function _seed(db) {
   ]
   for (const [username, name, pw, role] of seedUsers) {
     const { salt, hash } = await hashPassword(pw)
-    // active 用 SQL 字面量，避免 D1 参数绑定存为 0
     await run(
       db,
-      'INSERT INTO users (username,name,password_salt,password_hash,role,active) VALUES (?,?,?,?,?,1)',
+      'INSERT INTO users (username,name,password_salt,password_hash,role) VALUES (?,?,?,?,?)',
       [username, name, salt, hash, role]
     )
   }
-  // 兜底：确保所有用户 active=1（修复 D1 可能写入异常值的问题）
-  await run(db, "UPDATE users SET active=1 WHERE active!=1")
-  await run(db, "INSERT INTO products (name,description,active) VALUES (?,?,'1')", [
+  await run(db, "INSERT INTO products (name,description) VALUES (?,?)", [
     'SD-WAN 专线',
     '软件定义广域网专线接入'
   ])
