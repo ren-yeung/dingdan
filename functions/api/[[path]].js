@@ -36,19 +36,13 @@ app.use('*', async (c, next) => {
     console.error('[AUTH] UID not found:', { uid: payload.uid, uidType: typeof payload.uid, allUsers })
     return c.json({ detail: '账号不存在（token UID=' + payload.uid + '，当前用户数=' + allUsers.length + '）', code: 'USER_NOT_FOUND' }, 403)
   }
-  // D1 已知问题：INSERT 写入的 active 值可能与预期不一致
-  // 兼容处理：若 active 为假值，尝试自动修复并放行
-  if (!u.active) {
-    console.warn('[AUTH] Auto-fixing inactive user:', { id: u.id, username: u.username, rawActive: u.active })
-    await run(c.env.DB, 'UPDATE users SET active=1 WHERE id=?', [u.id])
-    u.active = 1
-  }
+  if (!u.active) return c.json({ detail: '账号已禁用（' + u.username + '）', code: 'INACTIVE' }, 403)
   c.set('user', u)
   await next()
 })
 
 // ---------- 健康检查 ----------
-app.get('/health', (c) => c.json({ status: 'ok', version: 'v3-login-fix' }))
+app.get('/health', (c) => c.json({ status: 'ok', version: 'v4-active-literal' }))
 // 调试端点（上线后删除）：查看数据库状态
 app.get('/debug/db', async (c) => {
   const db = c.env.DB
@@ -106,24 +100,10 @@ app.post('/login', async (c) => {
   const b = await c.req.json().catch(() => ({}))
   const username = (b.username || '').trim()
   const password = (b.password || '').trim()
-  let u = await get(db, 'SELECT * FROM users WHERE username=?', [username])
+  const u = await get(db, 'SELECT * FROM users WHERE username=?', [username])
   if (!u) return c.json({ detail: '账号或密码错误' }, 401)
-  // D1 已知问题：active 可能被存为 0，自动修复
-  if (!u.active) {
-    await run(db, 'UPDATE users SET active=1 WHERE id=?', [u.id])
-    u.active = 1
-  }
-  // 密码验证：若失败且是种子账户（密码可能是之前 PBKDF2 超时损坏的），自动重设
-  let ok = await verifyPassword(password, u.password_salt, u.password_hash)
-  if (!ok && ['admin','manager','sales'].includes(username)) {
-    console.warn('[LOGIN] Seed account password mismatch, re-hashing:', username)
-    const { salt, hash } = await hashPassword(password)
-    await run(db, 'UPDATE users SET password_salt=?, password_hash=? WHERE id=?', [salt, hash, u.id])
-    ok = true // 刚用相同密码重新哈希了，直接放行
-    // 更新本地对象供后续签发 token 使用
-    u.password_salt = salt
-    u.password_hash = hash
-  }
+  if (!u.active) return c.json({ detail: '账号已禁用' }, 401)
+  const ok = await verifyPassword(password, u.password_salt, u.password_hash)
   if (!ok) return c.json({ detail: '账号或密码错误' }, 401)
   const token = await signToken({ uid: u.id, role: u.role, name: u.name }, SECRET(c.env))
   return c.json({ token, user: publicUser(u) })
@@ -394,9 +374,12 @@ app.post('/users', async (c) => {
   if (await get(db, 'SELECT id FROM users WHERE username=?', [username]))
     return c.json({ detail: '用户名已存在' }, 400)
   const { salt, hash } = await hashPassword(password)
-  const res = await run(db, 'INSERT INTO users (username,name,password_salt,password_hash,role,active) VALUES (?,?,?,?,?,?)',
-    [username, b.name || username, salt, hash, b.role, b.active === false ? 0 : 1])
-  return c.json({ id: res.meta.last_row_id, username, name: b.name || username, role: b.role, active: b.active !== false }, 201)
+  // 用 SQL 字面量写 active，避免 D1 参数绑定把布尔/JS数字存成异常值
+  const activeVal = (b.active === false) ? 0 : 1
+  const res = await run(db,
+    'INSERT INTO users (username,name,password_salt,password_hash,role,active) VALUES (?,?,?,?,?,' + activeVal + ')',
+    [username, b.name || username, salt, hash, b.role])
+  return c.json({ id: res.meta.last_row_id, username, name: b.name || username, role: b.role, active: !!activeVal }, 201)
 })
 
 app.put('/users/:id', async (c) => {
@@ -411,7 +394,8 @@ app.put('/users/:id', async (c) => {
     if (!['admin', 'sales', 'manager'].includes(b.role)) return c.json({ detail: '角色非法' }, 400)
     sets.push('role=?'); params.push(b.role)
   }
-  if ('active' in b) { sets.push('active=?'); params.push(b.active ? 1 : 0) }
+  // active 用 SQL 字面量，避免 D1 绑定类型问题
+  if ('active' in b) sets.push('active=' + ((b.active && b.active !== false) ? '1' : '0'))
   if (b.password) {
     const { salt, hash } = await hashPassword(b.password)
     sets.push('password_salt=?', 'password_hash=?')
@@ -439,9 +423,11 @@ app.post('/products', async (c) => {
   const db = c.env.DB
   if (c.get('user').role !== 'admin') return c.json({ detail: '无权限' }, 403)
   const b = await c.req.json().catch(() => ({}))
-  const res = await run(db, 'INSERT INTO products (name,description,active) VALUES (?,?,?)',
-    [b.name || '', b.description || '', b.active === false ? 0 : 1])
-  return c.json({ id: res.meta.last_row_id, name: b.name, description: b.description, active: b.active !== false }, 201)
+  const activeVal = (b.active === false) ? 0 : 1
+  const res = await run(db,
+    'INSERT INTO products (name,description,active) VALUES (?,?,' + activeVal + ')',
+    [b.name || '', b.description || ''])
+  return c.json({ id: res.meta.last_row_id, name: b.name, description: b.description, active: !!activeVal }, 201)
 })
 app.put('/products/:id', async (c) => {
   const db = c.env.DB
@@ -452,7 +438,8 @@ app.put('/products/:id', async (c) => {
   const params = []
   if ('name' in b) { sets.push('name=?'); params.push(b.name) }
   if ('description' in b) { sets.push('description=?'); params.push(b.description) }
-  if ('active' in b) { sets.push('active=?'); params.push(b.active ? 1 : 0) }
+  // active 用 SQL 字面量
+  if ('active' in b) sets.push('active=' + ((b.active && b.active !== false) ? '1' : '0'))
   if (!sets.length) return c.json({ ok: true })
   params.push(id)
   await run(db, 'UPDATE products SET ' + sets.join(',') + ' WHERE id=?', params)
