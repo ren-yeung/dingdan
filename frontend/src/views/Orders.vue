@@ -74,15 +74,13 @@
 
     <!-- 测试转正式 -->
     <el-dialog title="测试转正式订单" v-model="convVisible" width="760px">
-      <div style="margin-bottom: 16px;">
-      <el-form label-width="100px">
+      <el-form label-width="100px" style="padding-top: 8px;">
         <el-form-item label="选择商机" required>
           <el-select v-model="selectedOppId" filterable placeholder="选择已通过的商机" style="width: 100%" @change="onPickOpp">
             <el-option v-for="o in approvedOpps" :key="o.id" :label="o.company_name + '（' + o.submitter_name + '）'" :value="o.id" />
           </el-select>
         </el-form-item>
       </el-form>
-      </div>
       <el-form :model="convForm" label-width="100px">
 
         <!-- 签约信息 -->
@@ -117,11 +115,8 @@
           <el-col :span="12"><el-form-item label="合作日期"><el-date-picker v-model="convForm.cooperation_date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col>
           <el-col :span="12">
             <el-form-item label="下个付款日">
-              <el-date-picker v-model="convForm.next_payment_date" value-format="YYYY-MM-DD" style="width:100%" :disabled="syncPay" />
+              <el-date-picker v-model="convForm.next_payment_date" value-format="YYYY-MM-DD" style="width:100%" />
             </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-checkbox v-model="syncPay">下一个付款日默认等于合作日期（首次转单）</el-checkbox>
           </el-col>
         </el-row>
 
@@ -266,7 +261,6 @@ const saving = ref(false)
 const approvedOpps = ref([])
 const convVisible = ref(false)
 const selectedOppId = ref(null)
-const syncPay = ref(true)
 const convForm = ref(emptyConv())
 
 const newVisible = ref(false)
@@ -338,7 +332,6 @@ async function openConvert() {
   approvedOpps.value = data
   convForm.value = emptyConv()
   selectedOppId.value = null
-  syncPay.value = true
   convVisible.value = true
 }
 function onPickOpp(id) {
@@ -356,7 +349,6 @@ async function submitConvert() {
   if (!selectedOppId.value) { ElMessage.warning('请选择商机'); return }
   if (!convForm.value.cooperation_date) { ElMessage.warning('请填写合作日期'); return }
   const payload = { ...convForm.value }
-  if (syncPay.value) payload.next_payment_date = payload.cooperation_date
   saving.value = true
   try {
     await api.post('/orders/convert/' + selectedOppId.value, payload)
