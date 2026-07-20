@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <!-- 桌面端 -->
+  <div v-if="!isMobile">
     <div class="page-head" style="margin-bottom: 16px;">
       <span class="page-icon"><el-icon><Setting /></el-icon></span>
       <div>
@@ -55,49 +56,101 @@
         </el-form>
       </el-tab-pane>
     </el-tabs>
-
-    <!-- 用户对话框 -->
-    <el-dialog :title="userForm.id ? '编辑用户' : '新增用户'" v-model="userVisible" width="480px">
-      <el-form :model="userForm" label-width="90px">
-        <el-form-item label="用户名"><el-input v-model="userForm.username" :disabled="!!userForm.id" /></el-form-item>
-        <el-form-item label="姓名"><el-input v-model="userForm.name" /></el-form-item>
-        <el-form-item :label="userForm.id ? '重置密码' : '密码'">
-          <el-input v-model="userForm.password" type="password" show-password :placeholder="userForm.id ? '留空则不修改' : '请输入密码'" />
-        </el-form-item>
-        <el-form-item label="角色">
-          <el-select v-model="userForm.role" style="width: 100%">
-            <el-option label="管理员" value="admin" />
-            <el-option label="销售主管" value="manager" />
-            <el-option label="销售" value="sales" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="userVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submitUser">保存</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 产品对话框 -->
-    <el-dialog :title="productForm.id ? '编辑产品' : '新增产品'" v-model="productVisible" width="480px">
-      <el-form :model="productForm" label-width="90px">
-        <el-form-item label="产品名称"><el-input v-model="productForm.name" /></el-form-item>
-        <el-form-item label="描述"><el-input v-model="productForm.description" type="textarea" :rows="3" /></el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="productVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submitProduct">保存</el-button>
-      </template>
-    </el-dialog>
   </div>
+
+  <!-- 移动端 -->
+  <div v-else class="m-page">
+    <div class="m-head">
+      <div class="m-title">系统设置</div>
+    </div>
+
+    <div class="m-card">
+      <div class="m-section-title" style="margin-top:0">修改密码</div>
+      <el-form :model="pwd" label-width="80px">
+        <el-form-item label="原密码"><el-input v-model="pwd.old_password" type="password" show-password /></el-form-item>
+        <el-form-item label="新密码"><el-input v-model="pwd.new_password" type="password" show-password /></el-form-item>
+        <el-button type="primary" :loading="pwdSaving" @click="changePwd">保存密码</el-button>
+      </el-form>
+    </div>
+
+    <template v-if="isAdmin">
+      <div class="m-section-title">用户管理</div>
+      <div v-for="u in users" :key="u.id" class="m-card">
+        <div class="m-row-top">
+          <span>{{ u.name }}（{{ u.username }}）</span>
+          <el-tag :type="roleType(u.role)" size="small">{{ roleLabel(u.role) }}</el-tag>
+        </div>
+        <div class="m-opp-actions">
+          <el-button link type="warning" size="small" @click="openUser(u)">编辑</el-button>
+          <el-button link type="danger" size="small" @click="delUser(u)">删除</el-button>
+        </div>
+      </div>
+      <el-button type="primary" size="small" :icon="Plus" @click="openUser()" style="margin: 4px 2px 16px;">新增用户</el-button>
+
+      <div class="m-section-title">产品管理</div>
+      <div v-for="p in products" :key="p.id" class="m-card">
+        <div class="m-row-top"><span>{{ p.name }}</span></div>
+        <div class="m-row-sub m-muted">{{ p.description }}</div>
+        <div class="m-opp-actions">
+          <el-button link type="warning" size="small" @click="openProduct(p)">编辑</el-button>
+          <el-button link type="danger" size="small" @click="delProduct(p)">删除</el-button>
+        </div>
+      </div>
+      <el-button type="primary" size="small" :icon="Plus" @click="openProduct()" style="margin: 4px 2px 16px;">新增产品</el-button>
+    </template>
+
+    <div v-else class="m-card">
+      <div class="m-muted" style="font-size:13px">您当前的角色为「{{ roleLabel(user && user.role) }}」，仅可修改个人密码。</div>
+    </div>
+  </div>
+
+  <!-- 用户对话框 -->
+  <el-dialog :title="userForm.id ? '编辑用户' : '新增用户'" v-model="userVisible" width="480px">
+    <el-form :model="userForm" label-width="90px">
+      <el-form-item label="用户名"><el-input v-model="userForm.username" :disabled="!!userForm.id" /></el-form-item>
+      <el-form-item label="姓名"><el-input v-model="userForm.name" /></el-form-item>
+      <el-form-item :label="userForm.id ? '重置密码' : '密码'">
+        <el-input v-model="userForm.password" type="password" show-password :placeholder="userForm.id ? '留空则不修改' : '请输入密码'" />
+      </el-form-item>
+      <el-form-item label="角色">
+        <el-select v-model="userForm.role" style="width: 100%">
+          <el-option label="管理员" value="admin" />
+          <el-option label="销售主管" value="manager" />
+          <el-option label="销售" value="sales" />
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="userVisible = false">取消</el-button>
+      <el-button type="primary" :loading="saving" @click="submitUser">保存</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 产品对话框 -->
+  <el-dialog :title="productForm.id ? '编辑产品' : '新增产品'" v-model="productVisible" width="480px">
+    <el-form :model="productForm" label-width="90px">
+      <el-form-item label="产品名称"><el-input v-model="productForm.name" /></el-form-item>
+      <el-form-item label="描述"><el-input v-model="productForm.description" type="textarea" :rows="3" /></el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="productVisible = false">取消</el-button>
+      <el-button type="primary" :loading="saving" @click="submitProduct">保存</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import api from '../api'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import auth, { setAuth } from '../store/auth'
+import { useDevice } from '../composables/useDevice'
+import { ElMessage, ElMessageBox } from 'element-plus'
+
+const { isMobile } = useDevice()
+
+const user = computed(() => auth.user)
+const isAdmin = computed(() => user.value && user.value.role === 'admin')
 
 const tab = ref('users')
 const users = ref([])
@@ -203,4 +256,18 @@ async function changePwd() {
 
 <style scoped>
 .toolbar { margin-bottom: 12px; }
+
+/* 移动端卡片样式 */
+.m-page { padding-bottom: 8px; }
+.m-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.m-title { font-size: 18px; font-weight: 700; color: #1f2d3d; }
+.m-section-title { font-size: 14px; font-weight: 600; color: #1f2d3d; margin: 18px 2px 10px; }
+.m-card {
+  background: #fff; border-radius: 14px; padding: 14px;
+  box-shadow: 0 2px 14px rgba(31, 45, 61, 0.07); margin-bottom: 12px;
+}
+.m-row-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.m-row-sub { font-size: 13px; margin-top: 4px; }
+.m-muted { color: #909399; }
+.m-opp-actions { margin-top: 10px; display: flex; gap: 4px; }
 </style>

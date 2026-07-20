@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <!-- 桌面端 -->
+  <div v-if="!isMobile">
     <div class="toolbar page-toolbar">
       <div class="page-head">
         <span class="page-icon"><el-icon><Opportunity /></el-icon></span>
@@ -43,122 +44,152 @@
         </template>
       </el-table-column>
     </el-table>
-
-    <!-- 提交/编辑 对话框 -->
-    <el-dialog :title="dialogTitle" v-model="formVisible" width="700px">
-      <el-form :model="form" label-width="90px" class="opp-form">
-        <el-row :gutter="24">
-          <el-col :span="12">
-            <el-form-item label="公司名称" required>
-              <el-input v-model="form.company_name" placeholder="测试公司名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="经办人" required>
-              <el-input v-model="form.handler" placeholder="客户方联系人" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="电话" required>
-              <el-input v-model="form.phone" placeholder="联系电话" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="本地运营商">
-              <el-input v-model="form.local_operator" placeholder="如：中国电信" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="需求带宽">
-              <el-input v-model="form.bandwidth" placeholder="如 100M" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="需求国家">
-              <el-input v-model="form.country" placeholder="如：美国" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="16">
-            <el-form-item label="安装地址">
-              <el-input v-model="form.install_address" placeholder="设备安装地址" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="提交人">
-              <el-select v-model="form.submitter_id" style="width: 100%">
-                <el-option
-                  v-for="u in submitterOptions"
-                  :key="u.id"
-                  :label="u.name"
-                  :value="u.id"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="访问网站">
-          <el-input v-model="form.website" placeholder="https://" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="formVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submitForm">保存</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 审核对话框 -->
-    <el-dialog title="审核测试需求" v-model="reviewVisible" width="520px">
-      <el-alert v-if="current" :closable="false" style="margin-bottom: 14px">
-        <template #title>
-          公司：{{ current.company_name }} · 经办人：{{ current.handler }} · {{ current.phone }}
-        </template>
-      </el-alert>
-      <el-form label-width="80px">
-        <el-form-item label="审核结果">
-          <el-radio-group v-model="reviewForm.status">
-            <el-radio value="approved">通过</el-radio>
-            <el-radio value="rejected">驳回</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="回复">
-          <el-input v-model="reviewForm.admin_reply" type="textarea" :rows="3" placeholder="审核意见 / 回复内容" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="reviewVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submitReview">提交审核</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 详情对话框 -->
-    <el-dialog title="测试需求详情" v-model="detailVisible" width="720px">
-      <template v-if="current">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="公司名称">{{ current.company_name }}</el-descriptions-item>
-          <el-descriptions-item label="经办人">{{ current.handler }}</el-descriptions-item>
-          <el-descriptions-item label="电话">{{ current.phone }}</el-descriptions-item>
-          <el-descriptions-item label="本地运营商">{{ current.local_operator }}</el-descriptions-item>
-          <el-descriptions-item label="需求带宽">{{ current.bandwidth }}</el-descriptions-item>
-          <el-descriptions-item label="需求国家">{{ current.country }}</el-descriptions-item>
-          <el-descriptions-item label="安装地址" :span="2">{{ current.install_address }}</el-descriptions-item>
-          <el-descriptions-item label="访问网站" :span="2">{{ current.website }}</el-descriptions-item>
-          <el-descriptions-item label="状态">
-            <el-tag :type="statusType(current.status)" size="small">{{ statusLabel(current.status) }}</el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="提交人">{{ current.submitter_name }}</el-descriptions-item>
-        </el-descriptions>
-        <el-alert v-if="current.admin_reply" type="info" :closable="false" style="margin-top: 14px">
-          <template #title>审核回复：{{ current.admin_reply }}</template>
-        </el-alert>
-      </template>
-    </el-dialog>
   </div>
+
+  <!-- 移动端 -->
+  <div v-else class="m-page">
+    <div class="m-head">
+      <div class="m-title">商机管理</div>
+      <el-button type="primary" size="small" :icon="Plus" @click="openCreate">提交</el-button>
+    </div>
+    <div class="m-filters">
+      <span
+        v-for="f in oppFilters"
+        :key="f.v"
+        :class="['m-chip', { active: statusFilter === f.v }]"
+        @click="statusFilter = f.v; load()"
+      >{{ f.label }}</span>
+    </div>
+    <div v-if="list.length === 0" class="m-empty">暂无商机</div>
+    <div v-for="row in list" :key="row.id" class="m-card">
+      <div class="m-opp-top">
+        <span class="m-opp-name">{{ row.company_name }}</span>
+        <el-tag :type="statusType(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
+      </div>
+      <div class="m-opp-line">经办人：{{ row.handler }} · {{ row.phone }}</div>
+      <div class="m-opp-line m-muted">{{ row.bandwidth }} · {{ row.country }} · 提交人：{{ row.submitter_name }}</div>
+      <div class="m-opp-actions">
+        <el-button link type="primary" size="small" @click="openDetail(row)">查看</el-button>
+        <el-button link type="warning" size="small" v-if="canEdit(row)" @click="openEdit(row)">修改</el-button>
+        <el-button link type="success" size="small" v-if="canReview(row)" @click="openReview(row)">审核</el-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提交/编辑 对话框 -->
+  <el-dialog :title="dialogTitle" v-model="formVisible" width="700px">
+    <el-form :model="form" label-width="90px" class="opp-form">
+      <el-row :gutter="24">
+        <el-col :span="12">
+          <el-form-item label="公司名称" required>
+            <el-input v-model="form.company_name" placeholder="测试公司名称" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="经办人" required>
+            <el-input v-model="form.handler" placeholder="客户方联系人" />
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="电话" required>
+            <el-input v-model="form.phone" placeholder="联系电话" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="本地运营商">
+            <el-input v-model="form.local_operator" placeholder="如：中国电信" />
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="需求带宽">
+            <el-input v-model="form.bandwidth" placeholder="如 100M" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="需求国家">
+            <el-input v-model="form.country" placeholder="如：美国" />
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="16">
+          <el-form-item label="安装地址">
+            <el-input v-model="form.install_address" placeholder="设备安装地址" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="提交人">
+            <el-select v-model="form.submitter_id" style="width: 100%">
+              <el-option
+                v-for="u in submitterOptions"
+                :key="u.id"
+                :label="u.name"
+                :value="u.id"
+              />
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-form-item label="访问网站">
+        <el-input v-model="form.website" placeholder="https://" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="formVisible = false">取消</el-button>
+      <el-button type="primary" :loading="saving" @click="submitForm">保存</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 审核对话框 -->
+  <el-dialog title="审核测试需求" v-model="reviewVisible" width="520px">
+    <el-alert v-if="current" :closable="false" style="margin-bottom: 14px">
+      <template #title>
+        公司：{{ current.company_name }} · 经办人：{{ current.handler }} · {{ current.phone }}
+      </template>
+    </el-alert>
+    <el-form label-width="80px">
+      <el-form-item label="审核结果">
+        <el-radio-group v-model="reviewForm.status">
+          <el-radio value="approved">通过</el-radio>
+          <el-radio value="rejected">驳回</el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="回复">
+        <el-input v-model="reviewForm.admin_reply" type="textarea" :rows="3" placeholder="审核意见 / 回复内容" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="reviewVisible = false">取消</el-button>
+      <el-button type="primary" :loading="saving" @click="submitReview">提交审核</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 详情对话框 -->
+  <el-dialog title="测试需求详情" v-model="detailVisible" width="720px">
+    <template v-if="current">
+      <el-descriptions :column="2" border>
+        <el-descriptions-item label="公司名称">{{ current.company_name }}</el-descriptions-item>
+        <el-descriptions-item label="经办人">{{ current.handler }}</el-descriptions-item>
+        <el-descriptions-item label="电话">{{ current.phone }}</el-descriptions-item>
+        <el-descriptions-item label="本地运营商">{{ current.local_operator }}</el-descriptions-item>
+        <el-descriptions-item label="需求带宽">{{ current.bandwidth }}</el-descriptions-item>
+        <el-descriptions-item label="需求国家">{{ current.country }}</el-descriptions-item>
+        <el-descriptions-item label="安装地址" :span="2">{{ current.install_address }}</el-descriptions-item>
+        <el-descriptions-item label="访问网站" :span="2">{{ current.website }}</el-descriptions-item>
+        <el-descriptions-item label="状态">
+          <el-tag :type="statusType(current.status)" size="small">{{ statusLabel(current.status) }}</el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="提交人">{{ current.submitter_name }}</el-descriptions-item>
+      </el-descriptions>
+      <el-alert v-if="current.admin_reply" type="info" :closable="false" style="margin-top: 14px">
+        <template #title>审核回复：{{ current.admin_reply }}</template>
+      </el-alert>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -166,11 +197,22 @@ import { ref, computed, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import api from '../api'
 import store from '../store/auth'
+import { useDevice } from '../composables/useDevice'
 import { ElMessage } from 'element-plus'
+
+const { isMobile } = useDevice()
 
 const user = computed(() => store.user)
 const list = ref([])
 const statusFilter = ref('')
+
+const oppFilters = [
+  { v: '', label: '全部' },
+  { v: 'pending', label: '待审核' },
+  { v: 'approved', label: '已通过' },
+  { v: 'rejected', label: '已驳回' },
+  { v: 'converted', label: '已转单' }
+]
 
 const emptyForm = () => ({
   company_name: '', handler: '', phone: '', install_address: '',
@@ -307,4 +349,25 @@ async function submitReview() {
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .opp-form { padding-top: 8px; }
 .opp-form .el-form-item { margin-bottom: 18px; }
+
+/* 移动端卡片样式 */
+.m-page { padding-bottom: 8px; }
+.m-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.m-title { font-size: 18px; font-weight: 700; color: #1f2d3d; }
+.m-empty { color: #909399; text-align: center; padding: 30px 0; font-size: 13px; }
+.m-filters { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px; }
+.m-chip {
+  flex: 0 0 auto; padding: 5px 14px; border-radius: 16px;
+  background: #fff; color: #606266; font-size: 13px; border: 1px solid #ebeef5;
+}
+.m-chip.active { background: var(--brand-gradient); color: #fff; border-color: transparent; }
+.m-card {
+  background: #fff; border-radius: 14px; padding: 14px;
+  box-shadow: 0 2px 14px rgba(31, 45, 61, 0.07); margin-bottom: 12px;
+}
+.m-opp-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.m-opp-name { font-size: 15px; font-weight: 600; color: #1f2d3d; }
+.m-opp-line { font-size: 13px; color: #303133; margin-top: 4px; }
+.m-muted { color: #909399; }
+.m-opp-actions { margin-top: 10px; display: flex; gap: 4px; }
 </style>

@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <!-- 桌面端 -->
+  <div v-if="!isMobile">
     <div class="toolbar page-toolbar">
       <div class="page-head">
         <span class="page-icon"><el-icon><List /></el-icon></span>
@@ -71,177 +72,215 @@
         </template>
       </el-table-column>
     </el-table>
-
-    <!-- 测试转正式 -->
-    <el-dialog title="测试转正式订单" v-model="convVisible" width="760px">
-      <el-form label-width="100px" style="padding-top: 8px;">
-        <el-form-item label="选择商机" required>
-          <el-select v-model="selectedOppId" filterable placeholder="选择已通过的商机" style="width: 100%" @change="onPickOpp">
-            <el-option v-for="o in approvedOpps" :key="o.id" :label="o.company_name + '（' + o.submitter_name + '）'" :value="o.id" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <el-form :model="convForm" label-width="100px">
-
-        <!-- 签约信息 -->
-        <div class="form-section-title"><span class="section-dot"></span>签约信息</div>
-        <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="甲方"><el-input v-model="convForm.party_a" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="乙方"><el-input v-model="convForm.party_b" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="技术提供方"><el-input v-model="convForm.tech_provider" /></el-form-item></el-col>
-        </el-row>
-
-        <!-- 产品与价格 -->
-        <div class="form-section-title"><span class="section-dot"></span>产品与价格</div>
-        <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="带宽"><el-input v-model="convForm.bandwidth" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="月租(元)"><el-input v-model.number="convForm.monthly_rent" type="number" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="合作周期"><el-input v-model="convForm.cooperation_period" placeholder="如 12个月" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="合作国家"><el-input v-model="convForm.country" placeholder="如 美国" /></el-form-item></el-col>
-        </el-row>
-
-        <!-- 客户信息 -->
-        <div class="form-section-title"><span class="section-dot"></span>客户信息<span class="section-hint">（来自测试需求，可修改）</span></div>
-        <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="实际使用方"><el-input v-model="convForm.actual_user" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="经办人"><el-input v-model="convForm.handler" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="联系电话"><el-input v-model="convForm.contact_phone" /></el-form-item></el-col>
-          <el-col :span="24"><el-form-item label="安装地址"><el-input v-model="convForm.install_address" /></el-form-item></el-col>
-        </el-row>
-
-        <!-- 时间与归属 -->
-        <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="归属销售"><el-select v-model="convForm.owner_id" style="width:100%"><el-option v-for="u in salesUsers" :key="u.id" :label="u.name" :value="u.id" /></el-select></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="合作日期"><el-date-picker v-model="convForm.cooperation_date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col>
-          <el-col :span="12">
-            <el-form-item label="下个付款日">
-              <el-date-picker v-model="convForm.next_payment_date" value-format="YYYY-MM-DD" style="width:100%" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-      </el-form>
-      <template #footer>
-        <el-button @click="convVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submitConvert">转正式订单</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 新建订单 -->
-    <el-dialog title="新建订单" v-model="newVisible" width="720px">
-      <el-form :model="newForm" label-width="100px">
-
-        <!-- 签约信息 -->
-        <div class="form-section-title"><span class="section-dot"></span>签约信息</div>
-        <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="甲方"><el-input v-model="newForm.party_a" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="乙方"><el-input v-model="newForm.party_b" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="技术提供方"><el-input v-model="newForm.tech_provider" /></el-form-item></el-col>
-        </el-row>
-
-        <!-- 产品与价格 -->
-        <div class="form-section-title"><span class="section-dot"></span>产品与价格</div>
-        <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="带宽"><el-input v-model="newForm.bandwidth" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="月租(元)"><el-input v-model.number="newForm.monthly_rent" type="number" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="合作周期"><el-input v-model="newForm.cooperation_period" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="合作国家"><el-input v-model="newForm.country" placeholder="如 美国" /></el-form-item></el-col>
-        </el-row>
-
-        <!-- 客户信息 -->
-        <div class="form-section-title"><span class="section-dot"></span>客户信息</div>
-        <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="实际使用方"><el-input v-model="newForm.actual_user" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="经办人"><el-input v-model="newForm.handler" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="联系电话"><el-input v-model="newForm.contact_phone" /></el-form-item></el-col>
-          <el-col :span="24"><el-form-item label="安装地址"><el-input v-model="newForm.install_address" /></el-form-item></el-col>
-        </el-row>
-
-        <!-- 时间与归属 -->
-        <div class="form-section-title"><span class="section-dot"></span>时间与归属</div>
-        <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="归属销售" required><el-select v-model="newForm.owner_id" style="width:100%"><el-option v-for="u in salesUsers" :key="u.id" :label="u.name" :value="u.id" /></el-select></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="合作日期"><el-date-picker v-model="newForm.cooperation_date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col>
-          <el-col :span="24"><el-form-item label="下个付款日"><el-date-picker v-model="newForm.next_payment_date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col>
-        </el-row>
-
-      </el-form>
-      <template #footer>
-        <el-button @click="newVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submitNew">创建</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 编辑订单 -->
-    <el-dialog title="编辑订单" v-model="editVisible" width="720px">
-      <el-form :model="editForm" label-width="100px">
-
-        <!-- 签约信息 -->
-        <div class="form-section-title"><span class="section-dot"></span>签约信息</div>
-        <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="甲方"><el-input v-model="editForm.party_a" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="乙方"><el-input v-model="editForm.party_b" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="技术提供方"><el-input v-model="editForm.tech_provider" /></el-form-item></el-col>
-        </el-row>
-
-        <!-- 产品与价格 -->
-        <div class="form-section-title"><span class="section-dot"></span>产品与价格</div>
-        <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="带宽"><el-input v-model="editForm.bandwidth" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="月租(元)"><el-input v-model.number="editForm.monthly_rent" type="number" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="合作周期"><el-input v-model="editForm.cooperation_period" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="合作国家"><el-input v-model="editForm.country" placeholder="如 美国" /></el-form-item></el-col>
-        </el-row>
-
-        <!-- 客户信息 -->
-        <div class="form-section-title"><span class="section-dot"></span>客户信息</div>
-        <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="实际使用方"><el-input v-model="editForm.actual_user" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="经办人"><el-input v-model="editForm.handler" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="联系电话"><el-input v-model="editForm.contact_phone" /></el-form-item></el-col>
-          <el-col :span="24"><el-form-item label="安装地址"><el-input v-model="editForm.install_address" /></el-form-item></el-col>
-        </el-row>
-
-        <!-- 时间与归属 -->
-        <div class="form-section-title"><span class="section-dot"></span>时间与归属</div>
-        <el-row :gutter="16">
-          <el-col :span="8"><el-form-item label="归属销售"><el-select v-model="editForm.owner_id" style="width:100%"><el-option v-for="u in salesUsers" :key="u.id" :label="u.name" :value="u.id" /></el-select></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="合作日期"><el-date-picker v-model="editForm.cooperation_date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="状态"><el-select v-model="editForm.status" style="width:100%"><el-option label="合作中" value="active" /><el-option label="已结束" value="ended" /></el-select></el-form-item></el-col>
-          <el-col :span="24"><el-form-item label="下个付款日"><el-date-picker v-model="editForm.next_payment_date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col>
-        </el-row>
-
-      </el-form>
-      <template #footer>
-        <el-button @click="editVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submitEdit">保存</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 详情 -->
-    <el-dialog title="订单详情" v-model="detailVisible" width="720px">
-      <template v-if="current">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="订单号">{{ current.order_no }}</el-descriptions-item>
-          <el-descriptions-item label="状态">{{ current.status === 'active' ? '合作中' : '已结束' }}</el-descriptions-item>
-          <el-descriptions-item label="甲方">{{ current.party_a }}</el-descriptions-item>
-          <el-descriptions-item label="乙方">{{ current.party_b }}</el-descriptions-item>
-          <el-descriptions-item label="技术提供方">{{ current.tech_provider }}</el-descriptions-item>
-          <el-descriptions-item label="实际使用方">{{ current.actual_user }}</el-descriptions-item>
-          <el-descriptions-item label="经办人">{{ current.handler }}</el-descriptions-item>
-          <el-descriptions-item label="联系电话">{{ current.contact_phone }}</el-descriptions-item>
-          <el-descriptions-item label="带宽">{{ current.bandwidth }}</el-descriptions-item>
-          <el-descriptions-item label="月租">¥{{ fmt(current.monthly_rent) }}</el-descriptions-item>
-          <el-descriptions-item label="合作周期">{{ current.cooperation_period }}</el-descriptions-item>
-          <el-descriptions-item label="合作日期">{{ current.cooperation_date }}</el-descriptions-item>
-          <el-descriptions-item label="下个付款日">{{ current.next_payment_date }}</el-descriptions-item>
-          <el-descriptions-item label="归属">{{ current.owner_name }}</el-descriptions-item>
-          <el-descriptions-item label="合作国家">{{ current.country }}</el-descriptions-item>
-          <el-descriptions-item label="安装地址" :span="2">{{ current.install_address }}</el-descriptions-item>
-        </el-descriptions>
-      </template>
-    </el-dialog>
   </div>
+
+  <!-- 移动端 -->
+  <div v-else class="m-page">
+    <div class="m-head">
+      <div class="m-title">销售订单</div>
+      <div class="m-head-actions">
+        <el-button type="success" size="small" :icon="Switch" v-if="isAdmin" @click="openConvert">转正式</el-button>
+        <el-button type="primary" size="small" :icon="Plus" v-if="isAdmin" @click="openNew">新建</el-button>
+      </div>
+    </div>
+    <div class="m-filters">
+      <span
+        v-for="f in orderFilters"
+        :key="f.v"
+        :class="['m-chip', { active: statusFilter === f.v }]"
+        @click="statusFilter = f.v; load()"
+      >{{ f.label }}</span>
+    </div>
+    <div v-if="sortedList.length === 0" class="m-empty">暂无订单</div>
+    <div v-for="row in sortedList" :key="row.id" class="m-card">
+      <div class="m-order-top">
+        <span class="m-order-user">{{ row.actual_user }}</span>
+        <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">
+          {{ row.status === 'active' ? '合作中' : '已结束' }}
+        </el-tag>
+      </div>
+      <div class="m-order-line">订单号：{{ row.order_no }}</div>
+      <div class="m-order-line m-muted">{{ row.bandwidth }} · ¥{{ fmt(row.monthly_rent) }}/月 · {{ row.cooperation_date }}</div>
+      <div class="m-order-line m-muted">归属：{{ row.owner_name }} · {{ row.country }}</div>
+      <div class="m-order-pay" :class="{ 'payment-urgent': isPaymentUrgent(row.next_payment_date) }" v-if="row.next_payment_date">
+        下个付款日：{{ row.next_payment_date }}
+      </div>
+      <div class="m-order-actions">
+        <el-button link type="primary" size="small" @click="openDetail(row)">查看</el-button>
+        <el-button link type="warning" size="small" v-if="isAdmin" @click="openEdit(row)">编辑</el-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 测试转正式 -->
+  <el-dialog title="测试转正式订单" v-model="convVisible" width="760px">
+    <el-form label-width="100px" style="padding-top: 8px;">
+      <el-form-item label="选择商机" required>
+        <el-select v-model="selectedOppId" filterable placeholder="选择已通过的商机" style="width: 100%" @change="onPickOpp">
+          <el-option v-for="o in approvedOpps" :key="o.id" :label="o.company_name + '（' + o.submitter_name + '）'" :value="o.id" />
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <el-form :model="convForm" label-width="100px">
+
+      <!-- 签约信息 -->
+      <div class="form-section-title"><span class="section-dot"></span>签约信息</div>
+      <el-row :gutter="16">
+        <el-col :span="12"><el-form-item label="甲方"><el-input v-model="convForm.party_a" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="乙方"><el-input v-model="convForm.party_b" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="技术提供方"><el-input v-model="convForm.tech_provider" /></el-form-item></el-col>
+      </el-row>
+
+      <!-- 产品与价格 -->
+      <div class="form-section-title"><span class="section-dot"></span>产品与价格</div>
+      <el-row :gutter="16">
+        <el-col :span="12"><el-form-item label="带宽"><el-input v-model="convForm.bandwidth" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="月租(元)"><el-input v-model.number="convForm.monthly_rent" type="number" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="合作周期"><el-input v-model="convForm.cooperation_period" placeholder="如 12个月" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="合作国家"><el-input v-model="convForm.country" placeholder="如 美国" /></el-form-item></el-col>
+      </el-row>
+
+      <!-- 客户信息 -->
+      <div class="form-section-title"><span class="section-dot"></span>客户信息<span class="section-hint">（来自测试需求，可修改）</span></div>
+      <el-row :gutter="16">
+        <el-col :span="12"><el-form-item label="实际使用方"><el-input v-model="convForm.actual_user" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="经办人"><el-input v-model="convForm.handler" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="联系电话"><el-input v-model="convForm.contact_phone" /></el-form-item></el-col>
+        <el-col :span="24"><el-form-item label="安装地址"><el-input v-model="convForm.install_address" /></el-form-item></el-col>
+      </el-row>
+
+      <!-- 时间与归属 -->
+      <el-row :gutter="16">
+        <el-col :span="12"><el-form-item label="归属销售"><el-select v-model="convForm.owner_id" style="width:100%"><el-option v-for="u in salesUsers" :key="u.id" :label="u.name" :value="u.id" /></el-select></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="合作日期"><el-date-picker v-model="convForm.cooperation_date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col>
+        <el-col :span="12">
+          <el-form-item label="下个付款日">
+            <el-date-picker v-model="convForm.next_payment_date" value-format="YYYY-MM-DD" style="width:100%" />
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+    </el-form>
+    <template #footer>
+      <el-button @click="convVisible = false">取消</el-button>
+      <el-button type="primary" :loading="saving" @click="submitConvert">转正式订单</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 新建订单 -->
+  <el-dialog title="新建订单" v-model="newVisible" width="720px">
+    <el-form :model="newForm" label-width="100px">
+
+      <!-- 签约信息 -->
+      <div class="form-section-title"><span class="section-dot"></span>签约信息</div>
+      <el-row :gutter="16">
+        <el-col :span="12"><el-form-item label="甲方"><el-input v-model="newForm.party_a" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="乙方"><el-input v-model="newForm.party_b" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="技术提供方"><el-input v-model="newForm.tech_provider" /></el-form-item></el-col>
+      </el-row>
+
+      <!-- 产品与价格 -->
+      <div class="form-section-title"><span class="section-dot"></span>产品与价格</div>
+      <el-row :gutter="16">
+        <el-col :span="12"><el-form-item label="带宽"><el-input v-model="newForm.bandwidth" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="月租(元)"><el-input v-model.number="newForm.monthly_rent" type="number" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="合作周期"><el-input v-model="newForm.cooperation_period" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="合作国家"><el-input v-model="newForm.country" placeholder="如 美国" /></el-form-item></el-col>
+      </el-row>
+
+      <!-- 客户信息 -->
+      <div class="form-section-title"><span class="section-dot"></span>客户信息</div>
+      <el-row :gutter="16">
+        <el-col :span="12"><el-form-item label="实际使用方"><el-input v-model="newForm.actual_user" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="经办人"><el-input v-model="newForm.handler" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="联系电话"><el-input v-model="newForm.contact_phone" /></el-form-item></el-col>
+        <el-col :span="24"><el-form-item label="安装地址"><el-input v-model="newForm.install_address" /></el-form-item></el-col>
+      </el-row>
+
+      <!-- 时间与归属 -->
+      <div class="form-section-title"><span class="section-dot"></span>时间与归属</div>
+      <el-row :gutter="16">
+        <el-col :span="12"><el-form-item label="归属销售" required><el-select v-model="newForm.owner_id" style="width:100%"><el-option v-for="u in salesUsers" :key="u.id" :label="u.name" :value="u.id" /></el-select></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="合作日期"><el-date-picker v-model="newForm.cooperation_date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col>
+        <el-col :span="24"><el-form-item label="下个付款日"><el-date-picker v-model="newForm.next_payment_date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col>
+      </el-row>
+
+    </el-form>
+    <template #footer>
+      <el-button @click="newVisible = false">取消</el-button>
+      <el-button type="primary" :loading="saving" @click="submitNew">创建</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 编辑订单 -->
+  <el-dialog title="编辑订单" v-model="editVisible" width="720px">
+    <el-form :model="editForm" label-width="100px">
+
+      <!-- 签约信息 -->
+      <div class="form-section-title"><span class="section-dot"></span>签约信息</div>
+      <el-row :gutter="16">
+        <el-col :span="12"><el-form-item label="甲方"><el-input v-model="editForm.party_a" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="乙方"><el-input v-model="editForm.party_b" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="技术提供方"><el-input v-model="editForm.tech_provider" /></el-form-item></el-col>
+      </el-row>
+
+      <!-- 产品与价格 -->
+      <div class="form-section-title"><span class="section-dot"></span>产品与价格</div>
+      <el-row :gutter="16">
+        <el-col :span="12"><el-form-item label="带宽"><el-input v-model="editForm.bandwidth" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="月租(元)"><el-input v-model.number="editForm.monthly_rent" type="number" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="合作周期"><el-input v-model="editForm.cooperation_period" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="合作国家"><el-input v-model="editForm.country" placeholder="如 美国" /></el-form-item></el-col>
+      </el-row>
+
+      <!-- 客户信息 -->
+      <div class="form-section-title"><span class="section-dot"></span>客户信息</div>
+      <el-row :gutter="16">
+        <el-col :span="12"><el-form-item label="实际使用方"><el-input v-model="editForm.actual_user" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="经办人"><el-input v-model="editForm.handler" /></el-form-item></el-col>
+        <el-col :span="12"><el-form-item label="联系电话"><el-input v-model="editForm.contact_phone" /></el-form-item></el-col>
+        <el-col :span="24"><el-form-item label="安装地址"><el-input v-model="editForm.install_address" /></el-form-item></el-col>
+      </el-row>
+
+      <!-- 时间与归属 -->
+      <div class="form-section-title"><span class="section-dot"></span>时间与归属</div>
+      <el-row :gutter="16">
+        <el-col :span="8"><el-form-item label="归属销售"><el-select v-model="editForm.owner_id" style="width:100%"><el-option v-for="u in salesUsers" :key="u.id" :label="u.name" :value="u.id" /></el-select></el-form-item></el-col>
+        <el-col :span="8"><el-form-item label="合作日期"><el-date-picker v-model="editForm.cooperation_date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col>
+        <el-col :span="8"><el-form-item label="状态"><el-select v-model="editForm.status" style="width:100%"><el-option label="合作中" value="active" /><el-option label="已结束" value="ended" /></el-select></el-form-item></el-col>
+        <el-col :span="24"><el-form-item label="下个付款日"><el-date-picker v-model="editForm.next_payment_date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col>
+      </el-row>
+
+    </el-form>
+    <template #footer>
+      <el-button @click="editVisible = false">取消</el-button>
+      <el-button type="primary" :loading="saving" @click="submitEdit">保存</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 详情 -->
+  <el-dialog title="订单详情" v-model="detailVisible" width="720px">
+    <template v-if="current">
+      <el-descriptions :column="2" border>
+        <el-descriptions-item label="订单号">{{ current.order_no }}</el-descriptions-item>
+        <el-descriptions-item label="状态">{{ current.status === 'active' ? '合作中' : '已结束' }}</el-descriptions-item>
+        <el-descriptions-item label="甲方">{{ current.party_a }}</el-descriptions-item>
+        <el-descriptions-item label="乙方">{{ current.party_b }}</el-descriptions-item>
+        <el-descriptions-item label="技术提供方">{{ current.tech_provider }}</el-descriptions-item>
+        <el-descriptions-item label="实际使用方">{{ current.actual_user }}</el-descriptions-item>
+        <el-descriptions-item label="经办人">{{ current.handler }}</el-descriptions-item>
+        <el-descriptions-item label="联系电话">{{ current.contact_phone }}</el-descriptions-item>
+        <el-descriptions-item label="带宽">{{ current.bandwidth }}</el-descriptions-item>
+        <el-descriptions-item label="月租">¥{{ fmt(current.monthly_rent) }}</el-descriptions-item>
+        <el-descriptions-item label="合作周期">{{ current.cooperation_period }}</el-descriptions-item>
+        <el-descriptions-item label="合作日期">{{ current.cooperation_date }}</el-descriptions-item>
+        <el-descriptions-item label="下个付款日">{{ current.next_payment_date }}</el-descriptions-item>
+        <el-descriptions-item label="归属">{{ current.owner_name }}</el-descriptions-item>
+        <el-descriptions-item label="合作国家">{{ current.country }}</el-descriptions-item>
+        <el-descriptions-item label="安装地址" :span="2">{{ current.install_address }}</el-descriptions-item>
+      </el-descriptions>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -249,7 +288,10 @@ import { ref, computed, onMounted } from 'vue'
 import { Plus, Switch } from '@element-plus/icons-vue'
 import api from '../api'
 import store from '../store/auth'
+import { useDevice } from '../composables/useDevice'
 import { ElMessage } from 'element-plus'
+
+const { isMobile } = useDevice()
 
 const user = computed(() => store.user)
 const isAdmin = computed(() => user.value.role === 'admin')
@@ -257,6 +299,12 @@ const list = ref([])
 const statusFilter = ref('')
 const salesUsers = ref([])
 const saving = ref(false)
+
+const orderFilters = [
+  { v: '', label: '全部' },
+  { v: 'active', label: '合作中' },
+  { v: 'ended', label: '已结束' }
+]
 
 const approvedOpps = ref([])
 const convVisible = ref(false)
@@ -460,4 +508,27 @@ function openDetail(row) {
 .order-sub { font-size: 12px; color: #909399; margin-top: 3px; }
 .col-light { font-size: 12px; color: #909399; margin-top: 2px; }
 .payment-urgent { color: #f56c6c; font-weight: 700; }
+
+/* 移动端卡片样式 */
+.m-page { padding-bottom: 8px; }
+.m-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.m-head-actions { display: flex; gap: 8px; }
+.m-title { font-size: 18px; font-weight: 700; color: #1f2d3d; }
+.m-empty { color: #909399; text-align: center; padding: 30px 0; font-size: 13px; }
+.m-filters { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px; }
+.m-chip {
+  flex: 0 0 auto; padding: 5px 14px; border-radius: 16px;
+  background: #fff; color: #606266; font-size: 13px; border: 1px solid #ebeef5;
+}
+.m-chip.active { background: var(--brand-gradient); color: #fff; border-color: transparent; }
+.m-card {
+  background: #fff; border-radius: 14px; padding: 14px;
+  box-shadow: 0 2px 14px rgba(31, 45, 61, 0.07); margin-bottom: 12px;
+}
+.m-order-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.m-order-user { font-size: 15px; font-weight: 600; color: #1f2d3d; }
+.m-order-line { font-size: 13px; color: #303133; margin-top: 4px; }
+.m-muted { color: #909399; }
+.m-order-pay { font-size: 12px; color: #606266; margin-top: 4px; }
+.m-order-actions { margin-top: 10px; display: flex; gap: 4px; }
 </style>

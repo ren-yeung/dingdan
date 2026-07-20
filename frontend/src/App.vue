@@ -104,4 +104,28 @@ body {
   background: linear-gradient(90deg, rgba(64, 158, 255, 0.06), rgba(103, 194, 58, 0.03));
 }
 .el-dialog__title { font-weight: 600; color: #1f2d3d; }
+
+/* ===== 移动端专属适配（仅 max-width:768px 生效，PC 端零影响） ===== */
+@media (max-width: 768px) {
+  /* 对话框近全屏，避免小屏被截断 */
+  .el-dialog {
+    width: 92vw !important;
+    max-width: 92vw !important;
+    margin-top: 8vh !important;
+  }
+  /* 对话框内表单改为单列 */
+  .el-dialog .el-row { display: block; }
+  .el-dialog .el-col {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+    float: none !important;
+  }
+  .el-dialog .el-form-item { margin-bottom: 16px; }
+  /* 确认框适配小屏 */
+  .el-message-box { width: 88vw !important; max-width: 360px; }
+
+  /* 日期/选择器等在窄屏内自然占满 */
+  .el-picker-panel { max-width: 92vw; }
+}
 </style>

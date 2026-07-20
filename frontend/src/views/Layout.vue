@@ -1,5 +1,6 @@
 <template>
-  <el-container class="layout">
+  <!-- 桌面端：原有布局，原封不动 -->
+  <el-container v-if="!isMobile" class="layout">
     <el-aside width="220px" class="aside">
       <div class="brand">
         <div class="brand-logo"><el-icon><Connection /></el-icon></div>
@@ -49,13 +50,37 @@
       </el-main>
     </el-container>
   </el-container>
+
+  <!-- 移动端：底部导航专属布局 -->
+  <div v-else class="m-shell">
+    <header class="m-topbar">
+      <span class="m-brand">翼嘉 · 天耘 ERP</span>
+      <el-button text type="primary" size="small" @click="onLogout">退出</el-button>
+    </header>
+    <div class="m-content">
+      <router-view />
+    </div>
+    <nav class="m-tabbar">
+      <div
+        v-for="m in mobileTabs"
+        :key="m.name"
+        :class="['m-tab', { active: route.name === m.name }]"
+        @click="go(m.name)"
+      >
+        <el-icon><component :is="m.icon" /></el-icon>
+        <span>{{ m.title }}</span>
+      </div>
+    </nav>
+  </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import store, { logout } from '../store/auth'
+import { useDevice } from '../composables/useDevice'
 
+const { isMobile } = useDevice()
 const route = useRoute()
 const router = useRouter()
 
@@ -67,6 +92,7 @@ const allMenus = [
 ]
 
 const menus = computed(() => allMenus.filter(m => !m.adminOnly || (store.user && store.user.role === 'admin')))
+const mobileTabs = computed(() => menus.value)
 const activeMenu = computed(() => route.name)
 const currentTitle = computed(() => {
   const m = allMenus.find(x => x.name === route.name)
@@ -90,6 +116,10 @@ const roleTip = computed(() => {
   }[r] || ''
 })
 
+function go(name) {
+  if (route.name === name) return
+  router.push({ name })
+}
 function onLogout() {
   logout()
   router.push('/login')
@@ -175,4 +205,26 @@ function onLogout() {
 .user { display: flex; align-items: center; gap: 10px; }
 .uname { color: #606266; font-size: 14px; }
 .main { background: #f5f7fa; }
+
+/* ===== 移动端外壳 ===== */
+.m-shell { display: flex; flex-direction: column; height: 100%; background: var(--page-bg); }
+.m-topbar {
+  height: 50px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 14px; background: #1b2733; color: #fff;
+}
+.m-brand { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
+.m-topbar :deep(.el-button) { color: #9fd0ff; margin: 0; }
+.m-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.m-tabbar {
+  height: 56px; flex-shrink: 0;
+  display: flex; background: #fff; border-top: 1px solid #ebeef5;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
+}
+.m-tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; color: #909399; font-size: 11px; cursor: pointer; user-select: none;
+}
+.m-tab .el-icon { font-size: 20px; }
+.m-tab.active { color: #409eff; font-weight: 600; }
 </style>
