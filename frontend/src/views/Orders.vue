@@ -21,8 +21,8 @@
       </div>
     </div>
 
-    <el-table :data="list" class="compact-table">
-      <el-table-column label="订单信息" min-width="280">
+    <el-table :data="sortedList" class="compact-table">
+      <el-table-column label="订单信息" min-width="260">
         <template #default="{ row }">
           <div class="order-info">
             <span class="order-no">{{ row.order_no }}</span>
@@ -32,16 +32,22 @@
           <div class="col-light">甲方：{{ row.party_a || '—' }} / 乙方：{{ row.party_b || '—' }}</div>
         </template>
       </el-table-column>
+      <el-table-column label="付款日" width="105" align="center">
+        <template #default="{ row }">
+          <span :class="{ 'payment-urgent': isPaymentUrgent(row.next_payment_date) }">
+            {{ row.next_payment_date || '-' }}
+          </span>
+        </template>
+      </el-table-column>
       <el-table-column label="产品" width="130">
         <template #default="{ row }">
           <div>{{ row.bandwidth }}</div>
           <div class="col-light">¥{{ fmt(row.monthly_rent) }}/月 · {{ row.cooperation_period }}</div>
         </template>
       </el-table-column>
-      <el-table-column label="时间" width="160">
+      <el-table-column label="时间" width="120">
         <template #default="{ row }">
           <div>合作：{{ row.cooperation_date || '-' }}</div>
-          <div class="col-light">付款：{{ row.next_payment_date || '-' }}</div>
         </template>
       </el-table-column>
       <el-table-column label="合作国家" width="90" align="center">
@@ -292,6 +298,30 @@ async function load() {
   const { data } = await api.get('/orders', { params: { status: statusFilter.value || undefined } })
   list.value = data
 }
+
+/** 付款日是否在当天前后15天内 */
+function isPaymentUrgent(dateStr) {
+  if (!dateStr) return false
+  const d = new Date(dateStr + 'T00:00:00')
+  if (isNaN(d.getTime())) return false
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const diff = Math.abs(d.getTime() - today.getTime()) / 86400000
+  return diff <= 15
+}
+
+/** 排序：付款临近（±15天）的排最上方 */
+const sortedList = computed(() => {
+  return [...list.value].sort((a, b) => {
+    const ua = isPaymentUrgent(a.next_payment_date) ? 0 : 1
+    const ub = isPaymentUrgent(b.next_payment_date) ? 0 : 1
+    if (ua !== ub) return ua - ub
+    // 同组内按付款日升序
+    const da = a.next_payment_date || '9999'
+    const db = b.next_payment_date || '9999'
+    return da.localeCompare(db)
+  })
+})
 async function loadSalesUsers() {
   if (!isAdmin.value) return
   const { data } = await api.get('/users')
@@ -433,4 +463,5 @@ function openDetail(row) {
 .order-user { font-size: 13px; color: #303133; font-weight: 500; }
 .order-sub { font-size: 12px; color: #909399; margin-top: 3px; }
 .col-light { font-size: 12px; color: #909399; margin-top: 2px; }
+.payment-urgent { color: #f56c6c; font-weight: 700; }
 </style>
