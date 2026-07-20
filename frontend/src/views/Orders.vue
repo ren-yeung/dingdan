@@ -310,9 +310,13 @@ function isPaymentUrgent(dateStr) {
   return diff <= 15
 }
 
-/** 排序：付款临近（±15天）的排最上方 */
+/** 排序：已结束排最底 → 付款临近（±15天）排最上方 */
 const sortedList = computed(() => {
   return [...list.value].sort((a, b) => {
+    // 1. 已结束永远在最后
+    if (a.status === 'ended' && b.status !== 'ended') return 1
+    if (a.status !== 'ended' && b.status === 'ended') return -1
+    // 2. 合作中订单：付款临近的排前
     const ua = isPaymentUrgent(a.next_payment_date) ? 0 : 1
     const ub = isPaymentUrgent(b.next_payment_date) ? 0 : 1
     if (ua !== ub) return ua - ub
