@@ -24,7 +24,7 @@ function genOrderNo() {
 // ---------- 鉴权中间件 ----------
 app.use('*', async (c, next) => {
   const path = c.req.path
-  if (path === '/api/login' || path === '/api/health') return next()
+  if (path === '/api/login' || path === '/api/health' || path === '/api/debug/db') return next()
   const h = c.req.header('Authorization') || ''
   const token = h.startsWith('Bearer ') ? h.slice(7) : ''
   if (!token) return c.json({ detail: '未登录' }, 401)

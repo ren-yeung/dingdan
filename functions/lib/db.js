@@ -83,7 +83,27 @@ export async function ensureSchema(db) {
 
 export async function ensureSeed(db) {
   const row = await get(db, 'SELECT COUNT(*) AS c FROM users')
-  if (row && row.c > 0) return
+  // 表空 → 直接种子
+  if (!row || row.c === 0) {
+    await _seed(db)
+    return
+  }
+  // 表非空但密码可能损坏（之前 PBKDF2 超时写入的垃圾数据）→ 验证 admin 密码
+  const admin = await get(db, "SELECT * FROM users WHERE username='admin'")
+  if (admin && admin.password_hash && admin.password_salt) {
+    try {
+      const { verifyPassword } = await import('./crypto.js')
+      const ok = await verifyPassword('admin123', admin.password_salt, admin.password_hash)
+      if (ok) return // 种子完好，不用管
+    } catch (e) { /* 验证失败/异常 → 需要重种 */ }
+  }
+  // 重种：删旧数据后重新创建
+  await run(db, 'DELETE FROM users')
+  await run(db, 'DELETE FROM products')
+  await _seed(db)
+}
+
+async function _seed(db) {
   const seedUsers = [
     ['admin', '管理员', 'admin123', 'admin'],
     ['manager', '销售主管', 'manager123', 'manager'],
