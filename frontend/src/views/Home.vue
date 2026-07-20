@@ -70,7 +70,6 @@
         </el-card>
         <el-card shadow="hover" header="最近订单">
           <el-table :data="dashboard.recent_orders" size="small" max-height="260">
-            <el-table-column prop="order_no" label="订单号" width="130" />
             <el-table-column prop="actual_user" label="实际使用方" show-overflow-tooltip />
             <el-table-column label="合作日期" width="105">
               <template #default="{ row }">{{ row.cooperation_date || '-' }}</template>
