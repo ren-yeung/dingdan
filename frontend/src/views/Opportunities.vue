@@ -89,27 +89,6 @@
             </el-form-item>
           </el-col>
         </el-row>
-
-        <el-divider>图片资料</el-divider>
-        <el-row :gutter="12">
-          <el-col :span="8" v-for="f in imgFields" :key="f.key">
-            <div class="img-field">
-              <div class="img-label">{{ f.label }}</div>
-              <el-upload
-                class="img-uploader"
-                :action="API_BASE + '/api/upload'"
-                :show-file-list="false"
-                accept="image/*"
-                :http-request="(opt) => customUpload(opt, f.key)"
-                :before-upload="beforeImg"
-              >
-                <img v-if="form[f.key]" :src="imgUrl(form[f.key])" class="preview" />
-                <div v-else class="upload-box"><el-icon><Plus /></el-icon><span>上传</span></div>
-              </el-upload>
-              <el-button v-if="form[f.key]" text type="danger" size="small" @click="form[f.key] = ''">移除</el-button>
-            </div>
-          </el-col>
-        </el-row>
       </el-form>
       <template #footer>
         <el-button @click="formVisible = false">取消</el-button>
@@ -158,16 +137,6 @@
           </el-descriptions-item>
           <el-descriptions-item label="提交人">{{ current.submitter_name }}</el-descriptions-item>
         </el-descriptions>
-        <el-divider>图片资料</el-divider>
-        <el-row :gutter="12">
-          <el-col :span="8" v-for="f in imgFields" :key="f.key">
-            <div class="img-field">
-              <div class="img-label">{{ f.label }}</div>
-              <img v-if="current[f.key]" :src="imgUrl(current[f.key])" class="preview big" />
-              <div v-else class="upload-box disabled">无</div>
-            </div>
-          </el-col>
-        </el-row>
         <el-alert v-if="current.admin_reply" type="info" :closable="false" style="margin-top: 14px">
           <template #title>审核回复：{{ current.admin_reply }}</template>
         </el-alert>
@@ -179,7 +148,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
-import api, { API_BASE, imgUrl } from '../api'
+import api from '../api'
 import store from '../store/auth'
 import { ElMessage } from 'element-plus'
 
@@ -187,15 +156,8 @@ const user = computed(() => store.user)
 const list = ref([])
 const statusFilter = ref('')
 
-const imgFields = [
-  { key: 'business_license', label: '公司营业执照' },
-  { key: 'storefront_photo', label: '公司门头照片' },
-  { key: 'office_photo', label: '办公环境照片' }
-]
-
 const emptyForm = () => ({
   company_name: '', handler: '', phone: '', install_address: '',
-  business_license: '', storefront_photo: '', office_photo: '',
   local_operator: '', bandwidth: '', country: '', website: ''
 })
 const form = ref(emptyForm())
@@ -261,25 +223,6 @@ function openReview(row) {
   reviewVisible.value = true
 }
 
-function beforeImg(file) {
-  const ok = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
-  if (!ok) { ElMessage.error('仅支持 jpg/png/webp'); return false }
-  if (file.size / 1024 / 1024 > 5) { ElMessage.error('图片不能超过 5MB'); return false }
-  return true
-}
-async function customUpload(option, field) {
-  const fd = new FormData()
-  fd.append('file', option.file)
-  try {
-    const { data } = await api.post('/upload', fd)
-    form.value[field] = data.url
-    option.onSuccess()
-  } catch (e) {
-    ElMessage.error('上传失败')
-    option.onError(e)
-  }
-}
-
 async function submitForm() {
   if (!form.value.company_name || !form.value.handler || !form.value.phone) {
     ElMessage.warning('请填写公司名称、经办人、电话')
@@ -322,14 +265,4 @@ async function submitReview() {
 
 <style scoped>
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-.img-field { text-align: center; }
-.img-label { font-size: 12px; color: #606266; margin-bottom: 6px; }
-.preview { width: 100%; height: 110px; object-fit: cover; border-radius: 6px; border: 1px solid #ebeef5; }
-.preview.big { height: 150px; }
-.upload-box {
-  width: 100%; height: 110px; border: 1px dashed #c0c4cc; border-radius: 6px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  color: #909399; cursor: pointer; gap: 4px;
-}
-.upload-box.disabled { cursor: default; background: #f5f7fa; }
 </style>
