@@ -1,4 +1,5 @@
 # 依赖
+node_modules/
 frontend/node_modules/
 backend/localpkgs/
 __pycache__/
@@ -22,6 +23,13 @@ Thumbs.db
 
 # 工作区内部目录（含本地记忆，勿上传）
 .workbuddy/
+
+# Cloudflare 本地运行产物
+.wrangler/
+.dev.vars
+
+# 前端构建产物（由部署时 build 命令重新生成）
+frontend/dist/
 
 # 编辑器/IDE
 .vscode/
