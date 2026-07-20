@@ -43,7 +43,7 @@ app.use('*', async (c, next) => {
 })
 
 // ---------- 健康检查 ----------
-app.get('/health', (c) => c.json({ status: 'ok' }))
+app.get('/health', (c) => c.json({ status: 'ok', version: 'v2-stable' }))
 // 调试端点（上线后删除）：查看数据库状态
 app.get('/debug/db', async (c) => {
   const db = c.env.DB
