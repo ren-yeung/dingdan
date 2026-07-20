@@ -275,7 +275,7 @@ const current = ref(null)
 
 function emptyOrder() {
   return {
-    party_a: '', party_b: '', tech_provider: '天耘科技', bandwidth: '', monthly_rent: 0,
+    party_a: '佛山翼嘉通讯设备有限公司', party_b: '广东天耘科技有限公司', tech_provider: '天耘科技', bandwidth: '', monthly_rent: 0,
     cooperation_period: '', cooperation_date: '', actual_user: '', handler: '',
     contact_phone: '', install_address: '', country: '', next_payment_date: '', owner_id: null, status: 'active'
   }
