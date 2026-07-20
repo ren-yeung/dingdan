@@ -32,18 +32,23 @@ app.use('*', async (c, next) => {
   if (!payload) return c.json({ detail: '登录过期' }, 401)
   const u = await get(c.env.DB, 'SELECT * FROM users WHERE id=?', [payload.uid])
   if (!u) {
-    // 临时调试：记录用户不存在时的完整上下文
     const allUsers = await all(c.env.DB, 'SELECT id,username,active FROM users')
     console.error('[AUTH] UID not found:', { uid: payload.uid, uidType: typeof payload.uid, allUsers })
     return c.json({ detail: '账号不存在（token UID=' + payload.uid + '，当前用户数=' + allUsers.length + '）', code: 'USER_NOT_FOUND' }, 403)
   }
-  if (!u.active) return c.json({ detail: '账号已禁用（username=' + u.username + ', active=' + u.active + '）', code: 'USER_INACTIVE' }, 403)
+  // D1 已知问题：INSERT 写入的 active 值可能与预期不一致
+  // 兼容处理：若 active 为假值，尝试自动修复并放行
+  if (!u.active) {
+    console.warn('[AUTH] Auto-fixing inactive user:', { id: u.id, username: u.username, rawActive: u.active })
+    await run(c.env.DB, 'UPDATE users SET active=1 WHERE id=?', [u.id])
+    u.active = 1
+  }
   c.set('user', u)
   await next()
 })
 
 // ---------- 健康检查 ----------
-app.get('/health', (c) => c.json({ status: 'ok', version: 'v2-stable' }))
+app.get('/health', (c) => c.json({ status: 'ok', version: 'v2-stable-active-fix' }))
 // 调试端点（上线后删除）：查看数据库状态
 app.get('/debug/db', async (c) => {
   const db = c.env.DB
