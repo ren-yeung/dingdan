@@ -6,7 +6,7 @@
   "description": "翼嘉通讯-天耘科技 SD-WAN 专线 ERP（Cloudflare 原生版：Pages + Functions + D1 + R2）",
   "scripts": {
     "dev": "wrangler pages dev frontend/dist",
-    "build": "npm --prefix frontend install && npm --prefix frontend run build",
+    "build": "npm install && npm --prefix frontend install && npm --prefix frontend run build",
     "deploy": "wrangler pages deploy frontend/dist"
   },
   "dependencies": {
