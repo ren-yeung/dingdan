@@ -24,7 +24,7 @@ function genOrderNo() {
 // ---------- 鉴权中间件 ----------
 app.use('*', async (c, next) => {
   const path = c.req.path
-  if (path === '/api/login' || path === '/api/health' || path === '/api/debug/db' || path === '/api/debug/token' || path === '/api/debug/reseed') return next()
+  if (path === '/api/login' || path === '/api/health' || path === '/api/debug/db' || path === '/api/debug/token' || path === '/api/debug/reseed' || path === '/api/debug/fix') return next()
   const h = c.req.header('Authorization') || ''
   const token = h.startsWith('Bearer ') ? h.slice(7) : ''
   if (!token) return c.json({ detail: '未登录' }, 401)
@@ -42,7 +42,7 @@ app.use('*', async (c, next) => {
 })
 
 // ---------- 健康检查 ----------
-app.get('/health', (c) => c.json({ status: 'ok', version: 'v4-active-literal' }))
+app.get('/health', (c) => c.json({ status: 'ok', version: 'v5-fix-all-active' }))
 // 调试端点（上线后删除）：查看数据库状态
 app.get('/debug/db', async (c) => {
   const db = c.env.DB
@@ -80,6 +80,13 @@ app.get('/debug/token', async (c) => {
   } catch (e) {
     return c.json({ error: e.message || 'Token parse error' }, 500)
   }
+})
+
+// 修复 D1 active=0 问题（一次性GET，稳定后删除）
+app.get('/debug/fix', async (c) => {
+  const db = c.env.DB
+  await run(db, "UPDATE users SET active=1 WHERE active!=1")
+  return c.json({ ok: true, users: await all(db, 'SELECT id,username,active FROM users') })
 })
 
 // 手动重种子端点（紧急修复用，上线稳定后删除）
@@ -452,7 +459,7 @@ app.delete('/products/:id', async (c) => {
   return c.json({ ok: true })
 })
 
-// ---------- 上传（R2） ----------
+// ---------- 上传（R2）----------
 app.post('/upload', async (c) => {
   const form = await c.req.parseBody()
   const file = form.file

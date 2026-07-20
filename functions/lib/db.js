@@ -96,15 +96,16 @@ async function _seed(db) {
   ]
   for (const [username, name, pw, role] of seedUsers) {
     const { salt, hash } = await hashPassword(pw)
+    // active 用 SQL 字面量，避免 D1 参数绑定存为 0
     await run(
       db,
       'INSERT INTO users (username,name,password_salt,password_hash,role,active) VALUES (?,?,?,?,?,1)',
       [username, name, salt, hash, role]
     )
   }
-  // 兼容某些 D1 场景下 active 未正确写入的问题，强制设为 1
-  await run(db, 'UPDATE users SET active=1 WHERE active=0')
-  await run(db, "INSERT INTO products (name,description,active) VALUES (?,?,1)", [
+  // 兜底：确保所有用户 active=1（修复 D1 可能写入异常值的问题）
+  await run(db, "UPDATE users SET active=1 WHERE active!=1")
+  await run(db, "INSERT INTO products (name,description,active) VALUES (?,?,'1')", [
     'SD-WAN 专线',
     '软件定义广域网专线接入'
   ])
