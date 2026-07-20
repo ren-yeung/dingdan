@@ -55,12 +55,15 @@
       <el-col :span="10">
         <el-card shadow="hover" header="最近商机" class="stacked">
           <el-table :data="dashboard.recent_opportunities" size="small" max-height="260">
-            <el-table-column label="年月日" width="150">
-              <template #default="{ row }">{{ row.created_at || '-' }}</template>
+            <el-table-column label="提交时间" width="110">
+              <template #default="{ row }">{{ (row.created_at || '').substring(0, 10) }}</template>
             </el-table-column>
             <el-table-column prop="submitter_name" label="提交人" width="80" />
             <el-table-column prop="bandwidth" label="带宽" width="70" />
             <el-table-column prop="country" label="国家" show-overflow-tooltip />
+            <el-table-column label="状态" width="80">
+              <template #default="{ row }">{{ oppStatusLabel(row.status) }}</template>
+            </el-table-column>
           </el-table>
         </el-card>
         <el-card shadow="hover" header="最近订单">
@@ -124,6 +127,10 @@ function barWidth(v) {
 function statusTagType(status) {
   const map = { pending: 'warning', approved: 'success', rejected: 'danger', converted: 'info' }
   return map[status] || 'info'
+}
+function oppStatusLabel(status) {
+  const map = { pending: '待审核', approved: '已通过', rejected: '已驳回', converted: '已转单' }
+  return map[status] || status || '-'
 }
 
 async function load() {
