@@ -149,9 +149,11 @@ app.post('/opportunities', async (c) => {
   const b = await c.req.json().catch(() => ({}))
   const cols = ['company_name', 'handler', 'phone', 'install_address', 'local_operator', 'bandwidth', 'country', 'website', 'business_license', 'storefront_photo', 'office_photo']
   const vals = cols.map((x) => (b[x] != null ? b[x] : ''))
+  // 管理员/主管可指定提交人，销售只能以自己名义提交
+  const submitterId = (u.role === 'admin' || u.role === 'manager') && b.submitter_id ? Number(b.submitter_id) : u.id
   const sql = 'INSERT INTO opportunities (' + cols.join(',') + ', submitter_id, status) VALUES (' +
     cols.map(() => '?').join(',') + ', ?, ?)'
-  const res = await run(db, sql, [...vals, u.id, 'pending'])
+  const res = await run(db, sql, [...vals, submitterId, 'pending'])
   const row = await get(db, 'SELECT o.*, u.name AS submitter_name FROM opportunities o LEFT JOIN users u ON u.id=o.submitter_id WHERE o.id=?', [res.meta.last_row_id])
   return c.json(row, 201)
 })

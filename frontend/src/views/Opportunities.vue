@@ -45,9 +45,9 @@
     </el-table>
 
     <!-- 提交/编辑 对话框 -->
-    <el-dialog :title="dialogTitle" v-model="formVisible" width="720px">
-      <el-form :model="form" label-width="120px">
-        <el-row :gutter="12">
+    <el-dialog :title="dialogTitle" v-model="formVisible" width="680px">
+      <el-form :model="form" label-width="100px" class="opp-form">
+        <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="公司名称" required>
               <el-input v-model="form.company_name" placeholder="测试公司名称" />
@@ -55,19 +55,23 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="经办人" required>
-              <el-input v-model="form.handler" />
+              <el-input v-model="form.handler" placeholder="客户方联系人" />
             </el-form-item>
           </el-col>
+        </el-row>
+        <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="电话" required>
-              <el-input v-model="form.phone" />
+              <el-input v-model="form.phone" placeholder="联系电话" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="本地运营商网络">
-              <el-input v-model="form.local_operator" />
+              <el-input v-model="form.local_operator" placeholder="如：中国电信" />
             </el-form-item>
           </el-col>
+        </el-row>
+        <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="需求带宽">
               <el-input v-model="form.bandwidth" placeholder="如 100M" />
@@ -75,20 +79,32 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="需求国家">
-              <el-input v-model="form.country" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="安装地址">
-              <el-input v-model="form.install_address" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="访问网站">
-              <el-input v-model="form.website" placeholder="https://" />
+              <el-input v-model="form.country" placeholder="如：美国" />
             </el-form-item>
           </el-col>
         </el-row>
+        <el-row :gutter="20">
+          <el-col :span="16">
+            <el-form-item label="安装地址">
+              <el-input v-model="form.install_address" placeholder="设备安装地址" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="提交人">
+              <el-select v-model="form.submitter_id" style="width: 100%">
+                <el-option
+                  v-for="u in submitterOptions"
+                  :key="u.id"
+                  :label="u.name"
+                  :value="u.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="访问网站">
+          <el-input v-model="form.website" placeholder="https://" />
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="formVisible = false">取消</el-button>
@@ -158,7 +174,8 @@ const statusFilter = ref('')
 
 const emptyForm = () => ({
   company_name: '', handler: '', phone: '', install_address: '',
-  local_operator: '', bandwidth: '', country: '', website: ''
+  local_operator: '', bandwidth: '', country: '', website: '',
+  submitter_id: null
 })
 const form = ref(emptyForm())
 const formVisible = ref(false)
@@ -170,6 +187,9 @@ const reviewVisible = ref(false)
 const reviewForm = ref({ status: 'approved', admin_reply: '' })
 const detailVisible = ref(false)
 const current = ref(null)
+
+// 提交人选项：除管理员外的所有用户
+const submitterOptions = ref([])
 
 function statusLabel(s) {
   return { pending: '待审核', approved: '已通过', rejected: '已驳回', converted: '已转订单' }[s] || s
@@ -198,20 +218,35 @@ async function load() {
   const { data } = await api.get('/opportunities', { params: { status: statusFilter.value || undefined } })
   list.value = data
 }
+
+async function loadUsers() {
+  try {
+    const { data } = await api.get('/users')
+    // 除管理员外的所有用户（含销售主管和销售）
+    submitterOptions.value = data.filter(u => u.role !== 'admin')
+  } catch (e) {
+    /* 非管理员无权获取用户列表时静默忽略 */
+  }
+}
 onMounted(load)
 
 function openCreate() {
   form.value = emptyForm()
+  // 默认提交人为当前登录用户
+  form.value.submitter_id = user.value.id
   editingId.value = null
   dialogTitle.value = '提交测试需求'
   formVisible.value = true
+  loadUsers()
 }
 function openEdit(row) {
   current.value = row
   form.value = { ...emptyForm(), ...row }
+  if (!form.value.submitter_id) form.value.submitter_id = user.value.id
   editingId.value = row.id
   dialogTitle.value = '修改测试需求'
   formVisible.value = true
+  loadUsers()
 }
 function openDetail(row) {
   current.value = row
@@ -265,4 +300,5 @@ async function submitReview() {
 
 <style scoped>
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.opp-form .el-form-item { margin-bottom: 18px; }
 </style>
