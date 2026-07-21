@@ -202,13 +202,14 @@ body {
   .m-rank .bar > i { display: block; height: 100%; border-radius: 3px; background: var(--brand-gradient); }
   .m-rank .val { font-size: 12px; color: #606266; margin-left: 10px; text-align: right; white-space: nowrap; line-height: 1.4; }
 
-  /* —— 筛选 chips（紧凑换行，不截断） —— */
+  /* —— 筛选 chips（flex:1 均分整行，自适应等分） —— */
   .m-chips {
     display: flex; flex-wrap: wrap; gap: 7px;
     margin: 0 2px 14px;
   }
   .m-chip {
-    flex: 0 0 auto; padding: 5px 13px; border-radius: 20px;
+    flex: 1 1 0; min-width: 0; text-align: center; white-space: nowrap;
+    padding: 6px 4px; border-radius: 20px;
     background: #fff; color: #5a6573; font-size: 12px; font-weight: 600;
     border: 1px solid #e8ebf0;
     transition: all .2s ease; user-select: none; cursor: pointer;
