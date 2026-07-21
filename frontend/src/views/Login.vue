@@ -33,7 +33,7 @@
       </el-form>
     </div>
 
-    <p class="login-footer">翼嘉通讯 &copy; {{ new Date().getFullYear() }}</p>
+    <p class="login-footer">天耘科技 &copy; {{ new Date().getFullYear() }}</p>
   </div>
 </template>
 
@@ -72,9 +72,10 @@ async function onSubmit() {
 </script>
 
 <style scoped>
-/* ===== 全局容器 ===== */
+/* ===== 全局容器 —— 固定满屏，不可滚动 ===== */
 .login-wrap {
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -83,6 +84,7 @@ async function onSubmit() {
   padding: 32px 24px;
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* 背景装饰 */
@@ -108,31 +110,32 @@ async function onSubmit() {
 /* ===== 品牌区域 ===== */
 .login-brand {
   text-align: center;
-  margin-bottom: 36px;
+  margin-bottom: 28px;
   position: relative;
   z-index: 1;
+  flex-shrink: 0;
 }
 .brand-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 .brand-icon svg {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   filter: drop-shadow(0 8px 24px rgba(64,158,255,.35));
 }
 .brand-title {
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 700;
   color: #fff;
   letter-spacing: 2px;
-  margin: 0 0 6px;
+  margin: 0 0 5px;
 }
 .brand-sub {
-  font-size: 13px;
-  color: rgba(255,255,255,.50);
+  font-size: 12px;
+  color: rgba(255,255,255,.45);
   margin: 0;
   letter-spacing: 1px;
 }
@@ -142,20 +145,21 @@ async function onSubmit() {
   width: 100%;
   max-width: 380px;
   background: rgba(255,255,255,.95);
-  border-radius: 18px;
-  padding: 28px 24px 24px;
+  border-radius: 16px;
+  padding: 22px 22px 18px;
   box-shadow:
     0 20px 60px rgba(0,0,0,.30),
     0 0 0 1px rgba(255,255,255,.08) inset;
   backdrop-filter: blur(12px);
   position: relative;
   z-index: 1;
+  flex-shrink: 0;
 }
 
 /* 输入框样式优化 */
 .login-form :deep(.el-input__wrapper) {
   border-radius: 10px;
-  padding: 4px 14px;
+  padding: 3px 14px;
   box-shadow: 0 0 0 1px #e4e7ed;
   transition: box-shadow .25s, border-color .25s;
 }
@@ -165,14 +169,14 @@ async function onSubmit() {
 .login-form :deep(.el-input__wrapper.is-focus) {
   box-shadow: 0 0 0 1px var(--el-color-primary), 0 0 0 3px rgba(64,158,255,.12);
 }
-.login-form :deep(.el-form-item) { margin-bottom: 20px; }
+.login-form :deep(.el-form-item) { margin-bottom: 16px; }
 
 /* 登录按钮 */
 .login-btn {
   width: 100%;
   border-radius: 10px;
-  height: 46px;
-  font-size: 16px;
+  height: 42px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: 6px;
   padding-left: 12px;
@@ -191,35 +195,38 @@ async function onSubmit() {
   text-align: center;
   font-size: 11px;
   color: rgba(255,255,255,.25);
-  margin-top: 24px;
+  margin-top: auto;
+  padding-top: 16px;
   letter-spacing: 1px;
   position: relative;
   z-index: 1;
+  flex-shrink: 0;
 }
 
-/* ===== 移动端适配（手机端更紧凑） ===== */
+/* ===== 移动端适配（固定一屏，不滚动） ===== */
 @media (max-width: 768px) {
   .login-wrap {
-    padding: 48px 20px 32px;
-    justify-content: flex-start;
+    height: 100vh;
+    height: 100dvh;
+    padding: 36px 20px calc(16px + env(safe-area-inset-bottom));
+    justify-content: center;
   }
-  .login-brand {
-    margin-bottom: 28px;
-  }
-  .brand-icon svg {
-    width: 48px;
-    height: 48px;
-  }
-  .brand-title {
-    font-size: 20px;
-  }
-  .login-form {
-    padding: 24px 20px 20px;
-    border-radius: 16px;
-  }
-  .login-btn {
-    height: 44px;
-    font-size: 15px;
-  }
+  .login-brand { margin-bottom: 20px; }
+  .brand-icon { margin-bottom: 10px; }
+  .brand-icon svg { width: 44px; height: 44px; }
+  .brand-title { font-size: 19px; }
+  .brand-sub { font-size: 11px; }
+  .login-form { padding: 18px 18px 16px; border-radius: 14px; }
+  .login-form :deep(.el-form-item) { margin-bottom: 13px; }
+  .login-btn { height: 40px; font-size: 14px; }
+  .login-footer { margin-top: auto; padding-top: 12px; font-size: 10px; }
+}
+
+/* 禁用整个页面的滚动 */
+html:has(.login-wrap), html:has(.login-wrap) body {
+  overflow: hidden !important;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 </style>
