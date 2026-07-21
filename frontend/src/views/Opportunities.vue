@@ -60,26 +60,45 @@
         @click="statusFilter = f.v; load()"
       >{{ f.label }}</span>
     </div>
-    <div v-if="list.length === 0" class="m-empty">
-      <div class="ic"><el-icon><Opportunity /></el-icon></div>
-      <div class="tx">暂无商机</div>
-    </div>
-    <div v-for="row in list" :key="row.id" class="m-card m-tappable" @click="openDetail(row)">
-      <div class="m-card-head">
-        <div class="m-avatar">{{ initial(row.company_name) }}</div>
-        <div class="m-card-text">
-          <div class="m-card-title">{{ row.company_name }}</div>
-          <div class="m-card-sub">{{ row.handler }} · {{ row.phone }}</div>
+    <div v-if="loading" class="gm-skel">
+      <div v-for="n in 4" :key="n" class="gm-skel-card">
+        <div class="gm-skel-head">
+          <div class="gm-skel-avatar gm-shimmer"></div>
+          <div class="gm-skel-lines">
+            <div class="gm-skel-line w70 gm-shimmer"></div>
+            <div class="gm-skel-line w40 gm-shimmer"></div>
+          </div>
+          <div class="gm-skel-tag gm-shimmer"></div>
         </div>
-        <el-tag :type="statusType(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
-      </div>
-      <div class="m-card-meta">{{ row.bandwidth }} · {{ row.country }} · 提交人 {{ row.submitter_name }}</div>
-      <div class="m-card-actions">
-        <el-button link type="primary" size="small" @click.stop="openDetail(row)">查看</el-button>
-        <el-button link type="warning" size="small" v-if="canEdit(row)" @click.stop="openEdit(row)">修改</el-button>
-        <el-button link type="success" size="small" v-if="canReview(row)" @click.stop="openReview(row)">审核</el-button>
+        <div class="gm-skel-meta gm-shimmer"></div>
+        <div class="gm-skel-actions">
+          <div class="gm-skel-btn gm-shimmer"></div>
+          <div class="gm-skel-btn gm-shimmer"></div>
+        </div>
       </div>
     </div>
+    <template v-else>
+      <div v-if="list.length === 0" class="m-empty">
+        <div class="ic"><el-icon><Opportunity /></el-icon></div>
+        <div class="tx">暂无商机</div>
+      </div>
+      <div v-for="row in list" :key="row.id" class="m-card m-tappable" @click="openDetail(row)">
+        <div class="m-card-head">
+          <div class="m-avatar">{{ initial(row.company_name) }}</div>
+          <div class="m-card-text">
+            <div class="m-card-title">{{ row.company_name }}</div>
+            <div class="m-card-sub">{{ row.handler }} · {{ row.phone }}</div>
+          </div>
+          <el-tag :type="statusType(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
+        </div>
+        <div class="m-card-meta">{{ row.bandwidth }} · {{ row.country }} · 提交人 {{ row.submitter_name }}</div>
+        <div class="m-card-actions">
+          <el-button link type="primary" size="small" @click.stop="openDetail(row)">查看</el-button>
+          <el-button link type="warning" size="small" v-if="canEdit(row)" @click.stop="openEdit(row)">修改</el-button>
+          <el-button link type="success" size="small" v-if="canReview(row)" @click.stop="openReview(row)">审核</el-button>
+        </div>
+      </div>
+    </template>
   </div>
 
   <!-- 提交/编辑 对话框 -->
@@ -210,6 +229,7 @@ const { isMobile } = useDevice()
 
 const user = computed(() => store.user)
 const list = ref([])
+const loading = ref(false)
 const statusFilter = ref('')
 
 const oppFilters = [
@@ -267,8 +287,15 @@ function canReview(row) {
 }
 
 async function load() {
-  const { data } = await api.get('/opportunities', { params: { status: statusFilter.value || undefined } })
-  list.value = data
+  loading.value = true
+  try {
+    const { data } = await api.get('/opportunities', { params: { status: statusFilter.value || undefined } })
+    list.value = data
+  } catch (e) {
+    /* 拦截器已处理 401 跳转 */
+  } finally {
+    loading.value = false
+  }
 }
 
 async function loadUsers() {

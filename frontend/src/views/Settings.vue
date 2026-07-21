@@ -75,37 +75,64 @@
 
     <template v-if="isAdmin">
       <div class="m-section-title">用户管理</div>
-      <div v-for="u in users" :key="u.id" class="m-card">
-        <div class="m-card-head">
-          <div class="m-avatar sm">{{ initial(u.name) }}</div>
-          <div class="m-card-text">
-            <div class="m-card-title">{{ u.name }}</div>
-            <div class="m-card-sub">@{{ u.username }}</div>
+      <div v-if="loading" class="gm-skel">
+        <div v-for="n in 3" :key="'su'+n" class="gm-skel-card">
+          <div class="gm-skel-head">
+            <div class="gm-skel-avatar sm gm-shimmer"></div>
+            <div class="gm-skel-lines">
+              <div class="gm-skel-line w70 gm-shimmer"></div>
+              <div class="gm-skel-line w40 gm-shimmer"></div>
+            </div>
+            <div class="gm-skel-tag gm-shimmer"></div>
           </div>
-          <el-tag :type="roleType(u.role)" size="small">{{ roleLabel(u.role) }}</el-tag>
-        </div>
-        <div class="m-card-actions">
-          <el-button link type="warning" size="small" @click="openUser(u)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="delUser(u)">删除</el-button>
         </div>
       </div>
-      <el-button type="primary" size="small" :icon="Plus" @click="openUser()" style="margin: 6px 2px 16px;">新增用户</el-button>
+      <template v-else>
+        <div v-for="u in users" :key="u.id" class="m-card">
+          <div class="m-card-head">
+            <div class="m-avatar sm">{{ initial(u.name) }}</div>
+            <div class="m-card-text">
+              <div class="m-card-title">{{ u.name }}</div>
+              <div class="m-card-sub">@{{ u.username }}</div>
+            </div>
+            <el-tag :type="roleType(u.role)" size="small">{{ roleLabel(u.role) }}</el-tag>
+          </div>
+          <div class="m-card-actions">
+            <el-button link type="warning" size="small" @click="openUser(u)">编辑</el-button>
+            <el-button link type="danger" size="small" @click="delUser(u)">删除</el-button>
+          </div>
+        </div>
+        <el-button type="primary" size="small" :icon="Plus" @click="openUser()" style="margin: 6px 2px 16px;">新增用户</el-button>
+      </template>
 
       <div class="m-section-title">产品管理</div>
-      <div v-for="p in products" :key="p.id" class="m-card">
-        <div class="m-card-head">
-          <div class="m-avatar sm" style="background: linear-gradient(135deg, #67c23a, #409eff)">{{ initial(p.name) }}</div>
-          <div class="m-card-text">
-            <div class="m-card-title">{{ p.name }}</div>
-            <div class="m-card-sub m-muted">{{ p.description || '无描述' }}</div>
+      <div v-if="loading" class="gm-skel">
+        <div v-for="n in 2" :key="'sp'+n" class="gm-skel-card">
+          <div class="gm-skel-head">
+            <div class="gm-skel-avatar sm gm-shimmer" style="background: linear-gradient(135deg, #67c23a, #409eff)"></div>
+            <div class="gm-skel-lines">
+              <div class="gm-skel-line w70 gm-shimmer"></div>
+              <div class="gm-skel-line w55 gm-shimmer"></div>
+            </div>
           </div>
         </div>
-        <div class="m-card-actions">
-          <el-button link type="warning" size="small" @click="openProduct(p)">编辑</el-button>
-          <el-button link type="danger" size="small" @click="delProduct(p)">删除</el-button>
-        </div>
       </div>
-      <el-button type="primary" size="small" :icon="Plus" @click="openProduct()" style="margin: 6px 2px 16px;">新增产品</el-button>
+      <template v-else>
+        <div v-for="p in products" :key="p.id" class="m-card">
+          <div class="m-card-head">
+            <div class="m-avatar sm" style="background: linear-gradient(135deg, #67c23a, #409eff)">{{ initial(p.name) }}</div>
+            <div class="m-card-text">
+              <div class="m-card-title">{{ p.name }}</div>
+              <div class="m-card-sub m-muted">{{ p.description || '无描述' }}</div>
+            </div>
+          </div>
+          <div class="m-card-actions">
+            <el-button link type="warning" size="small" @click="openProduct(p)">编辑</el-button>
+            <el-button link type="danger" size="small" @click="delProduct(p)">删除</el-button>
+          </div>
+        </div>
+        <el-button type="primary" size="small" :icon="Plus" @click="openProduct()" style="margin: 6px 2px 16px;">新增产品</el-button>
+      </template>
     </template>
 
     <div v-else class="m-card">
@@ -166,6 +193,7 @@ const users = ref([])
 const products = ref([])
 const saving = ref(false)
 const pwdSaving = ref(false)
+const loading = ref(false)
 
 const userVisible = ref(false)
 const userForm = ref({ id: null, username: '', name: '', password: '', role: 'sales' })
@@ -188,7 +216,18 @@ async function loadProducts() {
   const { data } = await api.get('/products')
   products.value = data
 }
-onMounted(() => { loadUsers(); loadProducts() })
+onMounted(async () => {
+  if (isAdmin.value) {
+    loading.value = true
+    try {
+      await Promise.all([loadUsers(), loadProducts()])
+    } catch (e) {
+      /* 拦截器已处理 401 跳转 */
+    } finally {
+      loading.value = false
+    }
+  }
+})
 
 function openUser(row) {
   userForm.value = row ? { ...row, password: '' } : { id: null, username: '', name: '', password: '', role: 'sales' }

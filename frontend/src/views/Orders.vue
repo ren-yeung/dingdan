@@ -91,31 +91,52 @@
         @click="statusFilter = f.v; load()"
       >{{ f.label }}</span>
     </div>
-    <div v-if="sortedList.length === 0" class="m-empty">
-      <div class="ic"><el-icon><List /></el-icon></div>
-      <div class="tx">暂无订单</div>
-    </div>
-    <div v-for="row in sortedList" :key="row.id" class="m-card m-tappable" @click="openDetail(row)">
-      <div class="m-card-head">
-        <div class="m-avatar">{{ initial(row.actual_user) }}</div>
-        <div class="m-card-text">
-          <div class="m-card-title">{{ row.actual_user }}</div>
-          <div class="m-card-sub">订单号 {{ row.order_no }}</div>
+    <div v-if="loading" class="gm-skel">
+      <div v-for="n in 4" :key="n" class="gm-skel-card">
+        <div class="gm-skel-head">
+          <div class="gm-skel-avatar gm-shimmer"></div>
+          <div class="gm-skel-lines">
+            <div class="gm-skel-line w70 gm-shimmer"></div>
+            <div class="gm-skel-line w55 gm-shimmer"></div>
+          </div>
+          <div class="gm-skel-tag gm-shimmer"></div>
         </div>
-        <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">
-          {{ row.status === 'active' ? '合作中' : '已结束' }}
-        </el-tag>
-      </div>
-      <div class="m-card-meta">{{ row.bandwidth }} · ¥{{ fmt(row.monthly_rent) }}/月 · {{ row.cooperation_date }}</div>
-      <div class="m-card-meta m-muted">归属 {{ row.owner_name }} · {{ row.country }}</div>
-      <div v-if="row.next_payment_date" class="m-pay" :class="{ urgent: isPaymentUrgent(row.next_payment_date) }">
-        <el-icon><Calendar /></el-icon> 下次付款 {{ row.next_payment_date }}
-      </div>
-      <div class="m-card-actions">
-        <el-button link type="primary" size="small" @click.stop="openDetail(row)">查看</el-button>
-        <el-button link type="warning" size="small" v-if="isAdmin" @click.stop="openEdit(row)">编辑</el-button>
+        <div class="gm-skel-meta gm-shimmer"></div>
+        <div class="gm-skel-meta gm-shimmer" style="width: 60%"></div>
+        <div class="gm-skel-pay gm-shimmer"></div>
+        <div class="gm-skel-actions">
+          <div class="gm-skel-btn gm-shimmer"></div>
+          <div class="gm-skel-btn gm-shimmer"></div>
+        </div>
       </div>
     </div>
+    <template v-else>
+      <div v-if="sortedList.length === 0" class="m-empty">
+        <div class="ic"><el-icon><List /></el-icon></div>
+        <div class="tx">暂无订单</div>
+      </div>
+      <div v-for="row in sortedList" :key="row.id" class="m-card m-tappable" @click="openDetail(row)">
+        <div class="m-card-head">
+          <div class="m-avatar">{{ initial(row.actual_user) }}</div>
+          <div class="m-card-text">
+            <div class="m-card-title">{{ row.actual_user }}</div>
+            <div class="m-card-sub">订单号 {{ row.order_no }}</div>
+          </div>
+          <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">
+            {{ row.status === 'active' ? '合作中' : '已结束' }}
+          </el-tag>
+        </div>
+        <div class="m-card-meta">{{ row.bandwidth }} · ¥{{ fmt(row.monthly_rent) }}/月 · {{ row.cooperation_date }}</div>
+        <div class="m-card-meta m-muted">归属 {{ row.owner_name }} · {{ row.country }}</div>
+        <div v-if="row.next_payment_date" class="m-pay" :class="{ urgent: isPaymentUrgent(row.next_payment_date) }">
+          <el-icon><Calendar /></el-icon> 下次付款 {{ row.next_payment_date }}
+        </div>
+        <div class="m-card-actions">
+          <el-button link type="primary" size="small" @click.stop="openDetail(row)">查看</el-button>
+          <el-button link type="warning" size="small" v-if="isAdmin" @click.stop="openEdit(row)">编辑</el-button>
+        </div>
+      </div>
+    </template>
   </div>
 
   <!-- 测试转正式 -->
@@ -302,6 +323,7 @@ const { isMobile } = useDevice()
 const user = computed(() => store.user)
 const isAdmin = computed(() => user.value.role === 'admin')
 const list = ref([])
+const loading = ref(false)
 const statusFilter = ref('')
 const salesUsers = ref([])
 const saving = ref(false)
@@ -347,8 +369,15 @@ function initial(s) {
 }
 
 async function load() {
-  const { data } = await api.get('/orders', { params: { status: statusFilter.value || undefined } })
-  list.value = data
+  loading.value = true
+  try {
+    const { data } = await api.get('/orders', { params: { status: statusFilter.value || undefined } })
+    list.value = data
+  } catch (e) {
+    /* 拦截器已处理 401 跳转 */
+  } finally {
+    loading.value = false
+  }
 }
 
 /** 付款日是否在当天前后15天内 */

@@ -226,6 +226,33 @@ body {
   }
   .m-pay.urgent { background: #fef0f0; color: #f56c6c; }
 
+  /* —— 通用骨架屏（与首页一致，加载占位） —— */
+  .gm-skel { padding: 0 2px; }
+  .gm-skel-card {
+    background: #fff; border-radius: 16px; padding: 15px;
+    box-shadow: 0 4px 18px rgba(31, 45, 61, 0.07); margin-bottom: 12px;
+  }
+  .gm-skel-head { display: flex; align-items: center; gap: 11px; }
+  .gm-skel-avatar { width: 40px; height: 40px; border-radius: 12px; flex: 0 0 auto; }
+  .gm-skel-avatar.sm { width: 32px; height: 32px; border-radius: 10px; }
+  .gm-skel-lines { flex: 1; min-width: 0; }
+  .gm-skel-line { height: 11px; border-radius: 6px; margin: 6px 0; }
+  .gm-skel-line.w90 { width: 90%; }
+  .gm-skel-line.w70 { width: 70%; }
+  .gm-skel-line.w55 { width: 55%; }
+  .gm-skel-line.w40 { width: 40%; }
+  .gm-skel-tag { width: 52px; height: 22px; border-radius: 11px; flex: 0 0 auto; }
+  .gm-skel-meta { height: 11px; border-radius: 6px; margin-top: 10px; width: 80%; }
+  .gm-skel-pay { height: 24px; border-radius: 9px; margin-top: 10px; width: 60%; }
+  .gm-skel-actions { display: flex; gap: 16px; margin-top: 12px; padding-top: 10px; border-top: 1px solid #f1f3f6; }
+  .gm-skel-btn { height: 16px; width: 44px; border-radius: 5px; }
+  .gm-shimmer {
+    background: linear-gradient(100deg, #e9edf3 30%, #f5f7fa 50%, #e9edf3 70%);
+    background-size: 200% 100%;
+    animation: gm-shimmer 1.25s ease-in-out infinite;
+  }
+  @keyframes gm-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
   /* —— 空状态 —— */
   .m-empty { text-align: center; padding: 44px 0; color: #a8b0bd; }
   .m-empty .ic { font-size: 40px; opacity: .45; }
