@@ -334,7 +334,14 @@ app.get('/dashboard', async (c) => {
     get(db, "SELECT COALESCE(SUM(monthly_rent),0)*3 AS total_performance, COUNT(*) AS total_orders FROM orders WHERE cooperation_date IS NOT NULL AND cooperation_date LIKE ?", [like]),
     get(db, "SELECT COUNT(*) AS c FROM opportunities WHERE created_at LIKE ?", [like]),
     // 历史销售排行：全部销售 + 销售主管的订单，按单量（order_count）排行，不限定月份
-    all(db, `SELECT u.id AS user_id, u.name, COALESCE(SUM(o.monthly_rent),0) AS performance, COUNT(o.id) AS order_count
+    // 业绩口径：每单 = (订单开始→下个付款日 的月数) × 月租，按月累加（客户季付，月数≈3）
+    all(db, `SELECT u.id AS user_id, u.name,
+            COALESCE(SUM(
+              CASE WHEN o.next_payment_date IS NOT NULL AND o.next_payment_date > o.cooperation_date
+                   THEN ROUND((julianday(o.next_payment_date) - julianday(o.cooperation_date)) / 30.4375) * o.monthly_rent
+                   ELSE 0 END
+            ), 0) AS performance,
+            COUNT(o.id) AS order_count
             FROM users u LEFT JOIN orders o ON o.owner_id=u.id
             WHERE u.role IN ('sales','manager') GROUP BY u.id ORDER BY order_count DESC, performance DESC`, []),
     all(db, 'SELECT o.*, u.name AS owner_name FROM orders o LEFT JOIN users u ON u.id=o.owner_id ORDER BY o.created_at DESC LIMIT 8'),
