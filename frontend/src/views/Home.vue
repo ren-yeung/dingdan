@@ -41,15 +41,15 @@
 
     <el-row :gutter="16" class="cards">
       <el-col :span="14">
-        <el-card shadow="hover" header="销售排行（按本月业绩）">
-          <div v-if="dashboard.ranking.length === 0" class="empty">本月暂无签约订单</div>
+        <el-card shadow="hover" header="历史销售排行（按单量）">
+          <div v-if="dashboard.ranking.length === 0" class="empty">暂无订单</div>
           <div v-for="(r, i) in dashboard.ranking" :key="r.user_id" class="rank-row">
             <span class="rank-no" :class="{ top: i < 3 }">{{ i + 1 }}</span>
             <span class="rank-name">{{ r.name }}</span>
             <div class="rank-bar">
-              <div class="rank-bar-in" :style="{ width: barWidth(r.performance) }"></div>
+              <div class="rank-bar-in" :style="{ width: barWidth(r.order_count) }"></div>
             </div>
-            <span class="rank-val">¥ {{ fmtNum(r.performance) }} · {{ r.order_count }}单</span>
+            <span class="rank-val">{{ r.order_count }} 单 · ¥ {{ fmtNum(r.performance) }}</span>
           </div>
         </el-card>
       </el-col>
@@ -101,7 +101,7 @@
         </div>
       </div>
 
-      <div class="m-section-title">销售排行</div>
+      <div class="m-section-title">历史销售排行</div>
       <div class="m-card">
         <div class="sk-line w80 mb"></div>
         <div class="sk-line w90 mb"></div>
@@ -134,19 +134,19 @@
       </div>
     </div>
 
-    <div class="m-section-title">销售排行</div>
+    <div class="m-section-title">历史销售排行</div>
     <div class="m-card">
       <div v-if="dashboard.ranking.length === 0" class="m-empty">
         <div class="ic"><el-icon><DataLine /></el-icon></div>
-        <div class="tx">本月暂无签约订单</div>
+        <div class="tx">暂无订单</div>
       </div>
       <div v-for="(r, i) in dashboard.ranking" :key="r.user_id" class="m-rank">
         <span class="no" :class="{ top: i < 3 }">{{ i + 1 }}</span>
         <div class="body">
           <div class="name">{{ r.name }}</div>
-          <div class="bar"><i :style="{ width: barWidth(r.performance) }"></i></div>
+          <div class="bar"><i :style="{ width: barWidth(r.order_count) }"></i></div>
         </div>
-        <div class="val">¥{{ fmtNum(r.performance) }}<br>{{ r.order_count }} 单</div>
+        <div class="val">{{ r.order_count }} 单<br>¥{{ fmtNum(r.performance) }}</div>
       </div>
     </div>
 
@@ -240,12 +240,12 @@ function fmtNum(n) {
   return cleaned.toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
-function maxPerf() {
-  const vals = dashboard.value.ranking.map(r => r.performance || 0)
+function maxCount() {
+  const vals = dashboard.value.ranking.map(r => r.order_count || 0)
   return Math.max(1, ...vals)
 }
 function barWidth(v) {
-  return Math.round((v / maxPerf()) * 100) + '%'
+  return Math.round((v / maxCount()) * 100) + '%'
 }
 function statusTagType(status) {
   const map = { pending: 'warning', approved: 'success', rejected: 'danger', converted: 'info' }
