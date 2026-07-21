@@ -512,13 +512,12 @@ function openDetail(row) {
 /* 移动端标题行按钮：间距相同，下拉不超出屏幕 */
 .m-actions-3 {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   width: 66%;
   min-width: 0;
 }
 .m-actions-3 :deep(.el-button) { flex: 1 1 0; min-width: 0; }
-.m-actions-3 :deep(.el-select) { flex: 1 1 0; min-width: 0; }
-.m-actions-3 :deep(.el-select .el-input__inner) { overflow: hidden; text-overflow: ellipsis; }
+.m-actions-3 :deep(.el-select) { flex: 1.6 1 0; min-width: 0; }
 
 /* 表单区块标题 */
 .form-section-title {
