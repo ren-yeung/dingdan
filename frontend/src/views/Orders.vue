@@ -517,6 +517,7 @@ function openDetail(row) {
   min-width: 0;
 }
 .m-actions-3 :deep(.el-button) { flex: 1 1 0; min-width: 0; }
+.m-actions-3 :deep(.el-button--success) { margin-right: -4px; }
 .m-actions-3 :deep(.el-select) { flex: 1.6 1 0; min-width: 0; }
 
 /* 表单区块标题 */
