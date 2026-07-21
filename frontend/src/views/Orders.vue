@@ -509,14 +509,14 @@ function openDetail(row) {
 <style scoped>
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 
-/* 移动端标题行三等分按钮 */
+/* 移动端标题行按钮：间距相同，下拉按人名自适应宽度 */
 .m-actions-3 {
   display: flex;
   gap: 8px;
   width: 66%;
 }
-.m-actions-3 > * { flex: 1 1 0; }
-.m-actions-3 :deep(.el-select) { width: 100%; }
+.m-actions-3 :deep(.el-button) { flex: 1 1 0; }
+.m-actions-3 :deep(.el-select) { flex: 0 0 auto; min-width: 0; }
 
 /* 表单区块标题 */
 .form-section-title {
