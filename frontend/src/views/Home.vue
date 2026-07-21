@@ -90,52 +90,58 @@
       <el-date-picker v-model="month" type="month" value-format="YYYY-MM" size="small" @change="load" />
     </div>
 
-    <div class="m-stats">
-      <div class="m-stat brand-stat">
-        <div class="ml">月度总业绩</div>
-        <div class="mv">¥{{ fmtNum(dashboard.total_performance) }}</div>
-      </div>
-      <div class="m-stat brand-stat">
-        <div class="ml">月度订单</div>
-        <div class="mv">{{ dashboard.total_orders }} 单</div>
-      </div>
-      <div class="m-stat brand-stat">
-        <div class="ml">月度商机</div>
-        <div class="mv">{{ dashboard.total_opportunities }} 个</div>
+    <div class="m-hero">
+      <div class="m-hero-label">本月总业绩（月租合计）</div>
+      <div class="m-hero-value">¥ {{ fmtNum(dashboard.total_performance) }}</div>
+      <div class="m-hero-stats">
+        <div class="m-hero-stat"><div class="v">{{ dashboard.total_orders }}</div><div class="l">签约订单</div></div>
+        <div class="m-hero-stat"><div class="v">{{ dashboard.total_opportunities }}</div><div class="l">新增商机</div></div>
       </div>
     </div>
 
     <div class="m-section-title">销售排行</div>
     <div class="m-card">
-      <div v-if="dashboard.ranking.length === 0" class="m-empty">本月暂无签约订单</div>
+      <div v-if="dashboard.ranking.length === 0" class="m-empty">
+        <div class="ic"><el-icon><DataLine /></el-icon></div>
+        <div class="tx">本月暂无签约订单</div>
+      </div>
       <div v-for="(r, i) in dashboard.ranking" :key="r.user_id" class="m-rank">
-        <span class="rank-no" :class="{ top: i < 3 }">{{ i + 1 }}</span>
-        <span class="rn">{{ r.name }}</span>
-        <span class="rv">¥{{ fmtNum(r.performance) }} · {{ r.order_count }}单</span>
+        <span class="no" :class="{ top: i < 3 }">{{ i + 1 }}</span>
+        <div class="body">
+          <div class="name">{{ r.name }}</div>
+          <div class="bar"><i :style="{ width: barWidth(r.performance) }"></i></div>
+        </div>
+        <div class="val">¥{{ fmtNum(r.performance) }}<br>{{ r.order_count }} 单</div>
       </div>
     </div>
 
     <div class="m-section-title">最近商机</div>
     <div class="m-card">
-      <div v-if="dashboard.recent_opportunities.length === 0" class="m-empty">暂无</div>
+      <div v-if="dashboard.recent_opportunities.length === 0" class="m-empty">
+        <div class="tx">暂无商机</div>
+      </div>
       <div v-for="o in dashboard.recent_opportunities" :key="o.id" class="m-row">
-        <div class="m-row-top">
-          <span>{{ o.submitter_name }}</span>
-          <span class="m-muted">{{ (o.created_at || '').substring(0, 10) }}</span>
+        <div class="m-row-head">
+          <div class="m-avatar sm">{{ initial(o.submitter_name) }}</div>
+          <div class="m-row-title">{{ o.submitter_name }}</div>
+          <div class="m-row-date">{{ (o.created_at || '').substring(0, 10) }}</div>
         </div>
-        <div class="m-row-sub">{{ o.bandwidth }} · {{ o.country }} · {{ oppStatusLabel(o.status) }}</div>
+        <div class="m-row-meta">{{ o.bandwidth }} · {{ o.country }} · {{ oppStatusLabel(o.status) }}</div>
       </div>
     </div>
 
     <div class="m-section-title">最近订单</div>
     <div class="m-card">
-      <div v-if="dashboard.recent_orders.length === 0" class="m-empty">暂无</div>
+      <div v-if="dashboard.recent_orders.length === 0" class="m-empty">
+        <div class="tx">暂无订单</div>
+      </div>
       <div v-for="o in dashboard.recent_orders" :key="o.id" class="m-row">
-        <div class="m-row-top">
-          <span>{{ o.actual_user }}</span>
-          <span class="m-muted">{{ o.cooperation_date }}</span>
+        <div class="m-row-head">
+          <div class="m-avatar sm">{{ initial(o.actual_user) }}</div>
+          <div class="m-row-title">{{ o.actual_user }}</div>
+          <div class="m-row-date">{{ o.cooperation_date }}</div>
         </div>
-        <div class="m-row-sub">{{ o.owner_name }} · ¥{{ fmtNum(o.monthly_rent) }}/月</div>
+        <div class="m-row-meta">{{ o.owner_name }} · ¥{{ fmtNum(o.monthly_rent) }}/月</div>
       </div>
     </div>
   </div>
@@ -193,6 +199,10 @@ function oppStatusLabel(status) {
   const map = { pending: '待审核', approved: '已通过', rejected: '已驳回', converted: '已转单' }
   return map[status] || status || '-'
 }
+function initial(s) {
+  const t = (s || '').trim()
+  return t ? t.charAt(0) : '?'
+}
 
 async function load() {
   try {
@@ -228,27 +238,4 @@ onMounted(load)
 .rank-val { width: 150px; text-align: right; font-size: 12px; color: #606266; }
 .empty { color: #909399; text-align: center; padding: 30px 0; }
 .stacked { margin-bottom: 16px; }
-
-/* 移动端卡片样式 */
-.m-page { padding-bottom: 8px; }
-.m-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.m-title { font-size: 18px; font-weight: 700; color: #1f2d3d; }
-.m-section-title { font-size: 14px; font-weight: 600; color: #1f2d3d; margin: 18px 2px 10px; }
-.m-card {
-  background: #fff; border-radius: 14px; padding: 14px;
-  box-shadow: 0 2px 14px rgba(31, 45, 61, 0.07); margin-bottom: 12px;
-}
-.m-empty { color: #909399; text-align: center; padding: 18px 0; font-size: 13px; }
-.m-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 4px; }
-.m-stat { background: #fff; border-radius: 14px; padding: 12px; box-shadow: 0 2px 14px rgba(31, 45, 61, 0.07); }
-.m-stat .ml { color: #909399; font-size: 11px; }
-.m-stat .mv { font-size: 16px; font-weight: 700; color: #1f2d3d; margin-top: 4px; }
-.m-row { padding: 6px 0; border-bottom: 1px solid #f2f4f7; }
-.m-row:last-child { border-bottom: none; }
-.m-row-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.m-row-sub { font-size: 12px; color: #606266; margin-top: 4px; }
-.m-muted { color: #909399; font-size: 12px; }
-.m-rank { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
-.m-rank .rn { flex: 1; font-size: 14px; color: #303133; }
-.m-rank .rv { font-size: 12px; color: #606266; text-align: right; }
 </style>

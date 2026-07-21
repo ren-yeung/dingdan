@@ -54,8 +54,8 @@
   <!-- 移动端：底部导航专属布局 -->
   <div v-else class="m-shell">
     <header class="m-topbar">
-      <span class="m-brand">翼嘉 · 天耘 ERP</span>
-      <el-button text type="primary" size="small" @click="onLogout">退出</el-button>
+      <span class="m-brand"><span class="m-logo"></span>翼嘉 · 天耘 ERP</span>
+      <span class="m-logout" @click="onLogout">退出</span>
     </header>
     <div class="m-content">
       <router-view />
@@ -209,22 +209,36 @@ function onLogout() {
 /* ===== 移动端外壳 ===== */
 .m-shell { display: flex; flex-direction: column; height: 100%; background: var(--page-bg); }
 .m-topbar {
-  height: 50px; flex-shrink: 0;
+  height: 52px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 14px; background: #1b2733; color: #fff;
+  padding: 0 16px; background: #fff; border-bottom: 1px solid #eef1f5;
+  position: sticky; top: 0; z-index: 20;
 }
-.m-brand { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
-.m-topbar :deep(.el-button) { color: #9fd0ff; margin: 0; }
-.m-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.m-brand { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 16px; color: #1f2d3d; letter-spacing: .3px; }
+.m-logo {
+  width: 22px; height: 22px; border-radius: 7px;
+  background: var(--brand-gradient);
+  box-shadow: 0 2px 6px rgba(64, 158, 255, .35);
+}
+.m-logout { color: #409eff; font-size: 14px; font-weight: 600; cursor: pointer; user-select: none; }
+.m-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
 .m-tabbar {
-  height: 56px; flex-shrink: 0;
-  display: flex; background: #fff; border-top: 1px solid #ebeef5;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
+  height: 60px; flex-shrink: 0;
+  display: flex; background: #fff; border-top: 1px solid #eef1f5;
+  box-shadow: 0 -4px 16px rgba(31, 45, 61, .06);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 .m-tab {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 2px; color: #909399; font-size: 11px; cursor: pointer; user-select: none;
+  gap: 3px; color: #9aa3b0; font-size: 11px; cursor: pointer; user-select: none;
+  position: relative; transition: color .2s ease;
 }
-.m-tab .el-icon { font-size: 20px; }
-.m-tab.active { color: #409eff; font-weight: 600; }
+.m-tab .el-icon { font-size: 21px; transition: transform .2s ease; }
+.m-tab.active { color: #2b6cff; font-weight: 700; }
+.m-tab.active .el-icon { transform: translateY(-1px); }
+.m-tab.active::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 26px; height: 3px; border-radius: 0 0 3px 3px;
+  background: var(--brand-gradient);
+}
 </style>

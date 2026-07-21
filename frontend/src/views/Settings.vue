@@ -61,46 +61,55 @@
   <!-- 移动端 -->
   <div v-else class="m-page">
     <div class="m-head">
-      <div class="m-title">系统设置</div>
+      <div class="m-title">我的</div>
     </div>
 
     <div class="m-card">
-      <div class="m-section-title" style="margin-top:0">修改密码</div>
-      <el-form :model="pwd" label-width="80px">
+      <div class="m-section-title" style="margin: 0 0 12px">修改密码</div>
+      <el-form :model="pwd" label-width="72px">
         <el-form-item label="原密码"><el-input v-model="pwd.old_password" type="password" show-password /></el-form-item>
         <el-form-item label="新密码"><el-input v-model="pwd.new_password" type="password" show-password /></el-form-item>
-        <el-button type="primary" :loading="pwdSaving" @click="changePwd">保存密码</el-button>
+        <el-button type="primary" :loading="pwdSaving" @click="changePwd" style="width: 100%">保存密码</el-button>
       </el-form>
     </div>
 
     <template v-if="isAdmin">
       <div class="m-section-title">用户管理</div>
       <div v-for="u in users" :key="u.id" class="m-card">
-        <div class="m-row-top">
-          <span>{{ u.name }}（{{ u.username }}）</span>
+        <div class="m-card-head">
+          <div class="m-avatar sm">{{ initial(u.name) }}</div>
+          <div class="m-card-text">
+            <div class="m-card-title">{{ u.name }}</div>
+            <div class="m-card-sub">@{{ u.username }}</div>
+          </div>
           <el-tag :type="roleType(u.role)" size="small">{{ roleLabel(u.role) }}</el-tag>
         </div>
-        <div class="m-opp-actions">
+        <div class="m-card-actions">
           <el-button link type="warning" size="small" @click="openUser(u)">编辑</el-button>
           <el-button link type="danger" size="small" @click="delUser(u)">删除</el-button>
         </div>
       </div>
-      <el-button type="primary" size="small" :icon="Plus" @click="openUser()" style="margin: 4px 2px 16px;">新增用户</el-button>
+      <el-button type="primary" size="small" :icon="Plus" @click="openUser()" style="margin: 6px 2px 16px;">新增用户</el-button>
 
       <div class="m-section-title">产品管理</div>
       <div v-for="p in products" :key="p.id" class="m-card">
-        <div class="m-row-top"><span>{{ p.name }}</span></div>
-        <div class="m-row-sub m-muted">{{ p.description }}</div>
-        <div class="m-opp-actions">
+        <div class="m-card-head">
+          <div class="m-avatar sm" style="background: linear-gradient(135deg, #67c23a, #409eff)">{{ initial(p.name) }}</div>
+          <div class="m-card-text">
+            <div class="m-card-title">{{ p.name }}</div>
+            <div class="m-card-sub m-muted">{{ p.description || '无描述' }}</div>
+          </div>
+        </div>
+        <div class="m-card-actions">
           <el-button link type="warning" size="small" @click="openProduct(p)">编辑</el-button>
           <el-button link type="danger" size="small" @click="delProduct(p)">删除</el-button>
         </div>
       </div>
-      <el-button type="primary" size="small" :icon="Plus" @click="openProduct()" style="margin: 4px 2px 16px;">新增产品</el-button>
+      <el-button type="primary" size="small" :icon="Plus" @click="openProduct()" style="margin: 6px 2px 16px;">新增产品</el-button>
     </template>
 
     <div v-else class="m-card">
-      <div class="m-muted" style="font-size:13px">您当前的角色为「{{ roleLabel(user && user.role) }}」，仅可修改个人密码。</div>
+      <div class="m-muted" style="font-size: 13px">您当前的角色为「{{ roleLabel(user && user.role) }}」，仅可修改个人密码。</div>
     </div>
   </div>
 
@@ -166,6 +175,10 @@ const pwd = ref({ old_password: '', new_password: '' })
 
 function roleLabel(r) { return { admin: '管理员', manager: '销售主管', sales: '销售' }[r] || r }
 function roleType(r) { return { admin: 'danger', manager: 'warning', sales: 'success' }[r] || 'info' }
+function initial(s) {
+  const t = (s || '').trim()
+  return t ? t.charAt(0) : '?'
+}
 
 async function loadUsers() {
   const { data } = await api.get('/users')
@@ -256,18 +269,4 @@ async function changePwd() {
 
 <style scoped>
 .toolbar { margin-bottom: 12px; }
-
-/* 移动端卡片样式 */
-.m-page { padding-bottom: 8px; }
-.m-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.m-title { font-size: 18px; font-weight: 700; color: #1f2d3d; }
-.m-section-title { font-size: 14px; font-weight: 600; color: #1f2d3d; margin: 18px 2px 10px; }
-.m-card {
-  background: #fff; border-radius: 14px; padding: 14px;
-  box-shadow: 0 2px 14px rgba(31, 45, 61, 0.07); margin-bottom: 12px;
-}
-.m-row-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.m-row-sub { font-size: 13px; margin-top: 4px; }
-.m-muted { color: #909399; }
-.m-opp-actions { margin-top: 10px; display: flex; gap: 4px; }
 </style>

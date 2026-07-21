@@ -77,13 +77,13 @@
   <!-- 移动端 -->
   <div v-else class="m-page">
     <div class="m-head">
-      <div class="m-title">销售订单</div>
+      <div class="m-title">订单</div>
       <div class="m-head-actions">
         <el-button type="success" size="small" :icon="Switch" v-if="isAdmin" @click="openConvert">转正式</el-button>
         <el-button type="primary" size="small" :icon="Plus" v-if="isAdmin" @click="openNew">新建</el-button>
       </div>
     </div>
-    <div class="m-filters">
+    <div class="m-chips">
       <span
         v-for="f in orderFilters"
         :key="f.v"
@@ -91,23 +91,29 @@
         @click="statusFilter = f.v; load()"
       >{{ f.label }}</span>
     </div>
-    <div v-if="sortedList.length === 0" class="m-empty">暂无订单</div>
-    <div v-for="row in sortedList" :key="row.id" class="m-card">
-      <div class="m-order-top">
-        <span class="m-order-user">{{ row.actual_user }}</span>
+    <div v-if="sortedList.length === 0" class="m-empty">
+      <div class="ic"><el-icon><List /></el-icon></div>
+      <div class="tx">暂无订单</div>
+    </div>
+    <div v-for="row in sortedList" :key="row.id" class="m-card m-tappable" @click="openDetail(row)">
+      <div class="m-card-head">
+        <div class="m-avatar">{{ initial(row.actual_user) }}</div>
+        <div class="m-card-text">
+          <div class="m-card-title">{{ row.actual_user }}</div>
+          <div class="m-card-sub">订单号 {{ row.order_no }}</div>
+        </div>
         <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">
           {{ row.status === 'active' ? '合作中' : '已结束' }}
         </el-tag>
       </div>
-      <div class="m-order-line">订单号：{{ row.order_no }}</div>
-      <div class="m-order-line m-muted">{{ row.bandwidth }} · ¥{{ fmt(row.monthly_rent) }}/月 · {{ row.cooperation_date }}</div>
-      <div class="m-order-line m-muted">归属：{{ row.owner_name }} · {{ row.country }}</div>
-      <div class="m-order-pay" :class="{ 'payment-urgent': isPaymentUrgent(row.next_payment_date) }" v-if="row.next_payment_date">
-        下个付款日：{{ row.next_payment_date }}
+      <div class="m-card-meta">{{ row.bandwidth }} · ¥{{ fmt(row.monthly_rent) }}/月 · {{ row.cooperation_date }}</div>
+      <div class="m-card-meta m-muted">归属 {{ row.owner_name }} · {{ row.country }}</div>
+      <div v-if="row.next_payment_date" class="m-pay" :class="{ urgent: isPaymentUrgent(row.next_payment_date) }">
+        <el-icon><Calendar /></el-icon> 下次付款 {{ row.next_payment_date }}
       </div>
-      <div class="m-order-actions">
-        <el-button link type="primary" size="small" @click="openDetail(row)">查看</el-button>
-        <el-button link type="warning" size="small" v-if="isAdmin" @click="openEdit(row)">编辑</el-button>
+      <div class="m-card-actions">
+        <el-button link type="primary" size="small" @click.stop="openDetail(row)">查看</el-button>
+        <el-button link type="warning" size="small" v-if="isAdmin" @click.stop="openEdit(row)">编辑</el-button>
       </div>
     </div>
   </div>
@@ -285,7 +291,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { Plus, Switch } from '@element-plus/icons-vue'
+import { Plus, Switch, Calendar } from '@element-plus/icons-vue'
 import api from '../api'
 import store from '../store/auth'
 import { useDevice } from '../composables/useDevice'
@@ -334,6 +340,10 @@ function emptyConv() {
 function fmt(n) {
   if (n == null) return '0'
   return Number(n).toLocaleString('zh-CN', { maximumFractionDigits: 2 })
+}
+function initial(s) {
+  const t = (s || '').trim()
+  return t ? t.charAt(0) : '?'
 }
 
 async function load() {
@@ -508,27 +518,4 @@ function openDetail(row) {
 .order-sub { font-size: 12px; color: #909399; margin-top: 3px; }
 .col-light { font-size: 12px; color: #909399; margin-top: 2px; }
 .payment-urgent { color: #f56c6c; font-weight: 700; }
-
-/* 移动端卡片样式 */
-.m-page { padding-bottom: 8px; }
-.m-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.m-head-actions { display: flex; gap: 8px; }
-.m-title { font-size: 18px; font-weight: 700; color: #1f2d3d; }
-.m-empty { color: #909399; text-align: center; padding: 30px 0; font-size: 13px; }
-.m-filters { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px; }
-.m-chip {
-  flex: 0 0 auto; padding: 5px 14px; border-radius: 16px;
-  background: #fff; color: #606266; font-size: 13px; border: 1px solid #ebeef5;
-}
-.m-chip.active { background: var(--brand-gradient); color: #fff; border-color: transparent; }
-.m-card {
-  background: #fff; border-radius: 14px; padding: 14px;
-  box-shadow: 0 2px 14px rgba(31, 45, 61, 0.07); margin-bottom: 12px;
-}
-.m-order-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.m-order-user { font-size: 15px; font-weight: 600; color: #1f2d3d; }
-.m-order-line { font-size: 13px; color: #303133; margin-top: 4px; }
-.m-muted { color: #909399; }
-.m-order-pay { font-size: 12px; color: #606266; margin-top: 4px; }
-.m-order-actions { margin-top: 10px; display: flex; gap: 4px; }
 </style>

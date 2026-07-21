@@ -49,10 +49,10 @@
   <!-- 移动端 -->
   <div v-else class="m-page">
     <div class="m-head">
-      <div class="m-title">商机管理</div>
+      <div class="m-title">商机</div>
       <el-button type="primary" size="small" :icon="Plus" @click="openCreate">提交</el-button>
     </div>
-    <div class="m-filters">
+    <div class="m-chips">
       <span
         v-for="f in oppFilters"
         :key="f.v"
@@ -60,18 +60,24 @@
         @click="statusFilter = f.v; load()"
       >{{ f.label }}</span>
     </div>
-    <div v-if="list.length === 0" class="m-empty">暂无商机</div>
-    <div v-for="row in list" :key="row.id" class="m-card">
-      <div class="m-opp-top">
-        <span class="m-opp-name">{{ row.company_name }}</span>
+    <div v-if="list.length === 0" class="m-empty">
+      <div class="ic"><el-icon><Opportunity /></el-icon></div>
+      <div class="tx">暂无商机</div>
+    </div>
+    <div v-for="row in list" :key="row.id" class="m-card m-tappable" @click="openDetail(row)">
+      <div class="m-card-head">
+        <div class="m-avatar">{{ initial(row.company_name) }}</div>
+        <div class="m-card-text">
+          <div class="m-card-title">{{ row.company_name }}</div>
+          <div class="m-card-sub">{{ row.handler }} · {{ row.phone }}</div>
+        </div>
         <el-tag :type="statusType(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
       </div>
-      <div class="m-opp-line">经办人：{{ row.handler }} · {{ row.phone }}</div>
-      <div class="m-opp-line m-muted">{{ row.bandwidth }} · {{ row.country }} · 提交人：{{ row.submitter_name }}</div>
-      <div class="m-opp-actions">
-        <el-button link type="primary" size="small" @click="openDetail(row)">查看</el-button>
-        <el-button link type="warning" size="small" v-if="canEdit(row)" @click="openEdit(row)">修改</el-button>
-        <el-button link type="success" size="small" v-if="canReview(row)" @click="openReview(row)">审核</el-button>
+      <div class="m-card-meta">{{ row.bandwidth }} · {{ row.country }} · 提交人 {{ row.submitter_name }}</div>
+      <div class="m-card-actions">
+        <el-button link type="primary" size="small" @click.stop="openDetail(row)">查看</el-button>
+        <el-button link type="warning" size="small" v-if="canEdit(row)" @click.stop="openEdit(row)">修改</el-button>
+        <el-button link type="success" size="small" v-if="canReview(row)" @click.stop="openReview(row)">审核</el-button>
       </div>
     </div>
   </div>
@@ -245,6 +251,10 @@ function fmtTime(t) {
 function statusType(s) {
   return { pending: 'warning', approved: 'success', rejected: 'danger', converted: 'info' }[s] || 'info'
 }
+function initial(s) {
+  const t = (s || '').trim()
+  return t ? t.charAt(0) : '?'
+}
 
 function canEdit(row) {
   if (user.value.role === 'admin') return true
@@ -349,25 +359,4 @@ async function submitReview() {
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .opp-form { padding-top: 8px; }
 .opp-form .el-form-item { margin-bottom: 18px; }
-
-/* 移动端卡片样式 */
-.m-page { padding-bottom: 8px; }
-.m-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.m-title { font-size: 18px; font-weight: 700; color: #1f2d3d; }
-.m-empty { color: #909399; text-align: center; padding: 30px 0; font-size: 13px; }
-.m-filters { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px; }
-.m-chip {
-  flex: 0 0 auto; padding: 5px 14px; border-radius: 16px;
-  background: #fff; color: #606266; font-size: 13px; border: 1px solid #ebeef5;
-}
-.m-chip.active { background: var(--brand-gradient); color: #fff; border-color: transparent; }
-.m-card {
-  background: #fff; border-radius: 14px; padding: 14px;
-  box-shadow: 0 2px 14px rgba(31, 45, 61, 0.07); margin-bottom: 12px;
-}
-.m-opp-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.m-opp-name { font-size: 15px; font-weight: 600; color: #1f2d3d; }
-.m-opp-line { font-size: 13px; color: #303133; margin-top: 4px; }
-.m-muted { color: #909399; }
-.m-opp-actions { margin-top: 10px; display: flex; gap: 4px; }
 </style>
