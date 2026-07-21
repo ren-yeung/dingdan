@@ -202,18 +202,20 @@ body {
   .m-rank .bar > i { display: block; height: 100%; border-radius: 3px; background: var(--brand-gradient); }
   .m-rank .val { font-size: 12px; color: #606266; margin-left: 10px; text-align: right; white-space: nowrap; line-height: 1.4; }
 
-  /* —— 筛选 chips —— */
-  .m-chips { display: flex; gap: 8px; margin: 0 2px 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
-  .m-chips::-webkit-scrollbar { display: none; }
+  /* —— 筛选 chips（紧凑换行，不截断） —— */
+  .m-chips {
+    display: flex; flex-wrap: wrap; gap: 7px;
+    margin: 0 2px 14px;
+  }
   .m-chip {
-    flex: 0 0 auto; padding: 7px 16px; border-radius: 20px;
-    background: #fff; color: #5a6573; font-size: 13px; font-weight: 600;
-    border: 1px solid #e8ebf0; box-shadow: 0 1px 3px rgba(31, 45, 61, .04);
+    flex: 0 0 auto; padding: 5px 13px; border-radius: 20px;
+    background: #fff; color: #5a6573; font-size: 12px; font-weight: 600;
+    border: 1px solid #e8ebf0;
     transition: all .2s ease; user-select: none; cursor: pointer;
   }
   .m-chip.active {
     color: #fff; border-color: transparent; background: var(--brand-gradient);
-    box-shadow: 0 4px 12px rgba(64, 158, 255, .28);
+    box-shadow: 0 3px 10px rgba(64, 158, 255, .25);
   }
 
   /* —— 付款提示 —— */
