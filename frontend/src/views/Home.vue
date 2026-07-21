@@ -157,11 +157,11 @@
       </div>
       <div v-for="o in dashboard.recent_opportunities" :key="o.id" class="m-row">
         <div class="m-row-head">
-          <div class="m-avatar sm">{{ initial(o.submitter_name) }}</div>
-          <div class="m-row-title">{{ o.submitter_name }}</div>
+          <div class="m-avatar sm">{{ initial(o.company_name) }}</div>
+          <div class="m-row-title">{{ o.company_name }}</div>
           <div class="m-row-date">{{ (o.created_at || '').substring(0, 10) }}</div>
         </div>
-        <div class="m-row-meta">{{ o.bandwidth }} · {{ o.country }} · {{ oppStatusLabel(o.status) }}</div>
+        <div class="m-row-meta">{{ o.submitter_name }} · {{ o.bandwidth }} · {{ o.country }}</div>
       </div>
     </div>
 
