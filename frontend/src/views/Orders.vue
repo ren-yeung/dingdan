@@ -81,8 +81,8 @@
   <div v-else class="m-page">
     <div class="m-head">
       <div class="m-title">订单</div>
-      <div class="m-head-actions">
-        <el-select v-if="showSalesFilter" v-model="salesFilter" placeholder="全部销售" clearable size="small" style="width: 110px; flex-shrink: 0" @change="load">
+      <div class="m-head-actions m-actions-3">
+        <el-select v-if="showSalesFilter" v-model="salesFilter" placeholder="全部销售" clearable size="small" @change="load">
           <el-option v-for="u in salesUsers" :key="u.id" :label="u.name" :value="u.id" />
         </el-select>
         <el-button type="success" size="small" :icon="Switch" v-if="isAdmin" @click="openConvert">转正式</el-button>
@@ -508,6 +508,15 @@ function openDetail(row) {
 
 <style scoped>
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+
+/* 移动端标题行三等分按钮 */
+.m-actions-3 {
+  display: flex;
+  gap: 8px;
+  width: 66%;
+}
+.m-actions-3 > * { flex: 1 1 0; }
+.m-actions-3 :deep(.el-select) { width: 100%; }
 
 /* 表单区块标题 */
 .form-section-title {
