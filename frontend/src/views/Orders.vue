@@ -10,6 +10,9 @@
         </div>
       </div>
       <div class="page-actions">
+        <el-select v-if="showSalesFilter" v-model="salesFilter" placeholder="全部销售" clearable style="width: 150px; margin-right: 10px" @change="load">
+          <el-option v-for="u in salesUsers" :key="u.id" :label="u.name" :value="u.id" />
+        </el-select>
         <el-radio-group v-model="statusFilter" @change="load">
           <el-radio-button label="">全部</el-radio-button>
           <el-radio-button label="active">合作中</el-radio-button>
@@ -83,6 +86,11 @@
         <el-button type="primary" size="small" :icon="Plus" v-if="isAdmin" @click="openNew">新建</el-button>
       </div>
     </div>
+    <div v-if="showSalesFilter" class="m-sales-filter">
+      <el-select v-model="salesFilter" placeholder="全部销售" clearable size="small" style="width: 100%" @change="load">
+        <el-option v-for="u in salesUsers" :key="u.id" :label="u.name" :value="u.id" />
+      </el-select>
+    </div>
     <div class="m-chips">
       <span
         v-for="f in orderFilters"
@@ -112,7 +120,7 @@
     </div>
     <template v-else>
       <div v-if="sortedList.length === 0" class="m-empty">
-        <div class="ic"><el-icon><List /></el-icon></div>
+        <div class="ic"><img class="m-empty-img" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23909' stroke-width='2'%3E%3Cpath d='M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01'/%3E%3C/svg%3E"/></div>
         <div class="tx">暂无订单</div>
       </div>
       <div v-for="row in sortedList" :key="row.id" class="m-card m-tappable" @click="openDetail(row)">
@@ -322,9 +330,12 @@ const { isMobile } = useDevice()
 
 const user = computed(() => store.user)
 const isAdmin = computed(() => user.value.role === 'admin')
+/** 销售主管或管理员才显示销售筛选下拉 */
+const showSalesFilter = computed(() => user.value.role !== 'sales')
 const list = ref([])
 const loading = ref(false)
 const statusFilter = ref('')
+const salesFilter = ref('')
 const salesUsers = ref([])
 const saving = ref(false)
 
@@ -371,7 +382,10 @@ function initial(s) {
 async function load() {
   loading.value = true
   try {
-    const { data } = await api.get('/orders', { params: { status: statusFilter.value || undefined } })
+    const params = {}
+    if (statusFilter.value) params.status = statusFilter.value
+    if (salesFilter.value) params.owner_id = salesFilter.value
+    const { data } = await api.get('/orders', { params })
     list.value = data
   } catch (e) {
     /* 拦截器已处理 401 跳转 */
@@ -408,7 +422,7 @@ const sortedList = computed(() => {
   })
 })
 async function loadSalesUsers() {
-  if (!isAdmin.value) return
+  if (user.value.role === 'sales') return
   const { data } = await api.get('/users')
   salesUsers.value = data.filter(u => u.role === 'sales' || u.role === 'manager')
 }

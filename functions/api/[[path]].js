@@ -218,11 +218,15 @@ app.get('/orders', async (c) => {
   const db = c.env.DB
   const u = c.get('user')
   const status = c.req.query('status')
+  const ownerId = c.req.query('owner_id')
   const where = []
   const params = []
   if (u.role === 'sales') {
     where.push('o.owner_id = ?')
     params.push(u.id)
+  } else if (ownerId) {
+    where.push('o.owner_id = ?')
+    params.push(ownerId)
   }
   if (status) {
     where.push('o.status = ?')
