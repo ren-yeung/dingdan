@@ -292,7 +292,8 @@
   </el-dialog>
 
   <!-- 详情 -->
-  <el-dialog title="订单详情" v-model="detailVisible" width="720px">
+  <!-- 订单详情 - 桌面 -->
+  <el-dialog v-if="!isMobile" title="订单详情" v-model="detailVisible" width="720px">
     <template v-if="current">
       <el-descriptions :column="2" border>
         <el-descriptions-item label="订单号">{{ current.order_no }}</el-descriptions-item>
@@ -312,6 +313,48 @@
         <el-descriptions-item label="合作国家">{{ current.country }}</el-descriptions-item>
         <el-descriptions-item label="安装地址" :span="2">{{ current.install_address }}</el-descriptions-item>
       </el-descriptions>
+    </template>
+  </el-dialog>
+
+  <!-- 订单详情 - 移动端 -->
+  <el-dialog v-else title="订单详情" v-model="detailVisible" width="90%" class="m-detail-dlg">
+    <template v-if="current">
+      <div class="m-detail">
+        <div class="m-detail-section">
+          <div class="m-detail-row"><span class="m-detail-label">订单号</span><span class="m-detail-val mono">{{ current.order_no }}</span></div>
+          <div class="m-detail-row"><span class="m-detail-label">状态</span><span :class="['m-detail-tag', current.status === 'active' ? 'tag-active' : 'tag-ended']">{{ current.status === 'active' ? '合作中' : '已结束' }}</span></div>
+          <div class="m-detail-row"><span class="m-detail-label">归属</span><span class="m-detail-val">{{ current.owner_name || '-' }}</span></div>
+        </div>
+        <div class="m-detail-section">
+          <div class="m-detail-title">签约信息</div>
+          <div class="m-detail-row"><span class="m-detail-label">甲方</span><span class="m-detail-val">{{ current.party_a || '-' }}</span></div>
+          <div class="m-detail-row"><span class="m-detail-label">乙方</span><span class="m-detail-val">{{ current.party_b || '-' }}</span></div>
+          <div class="m-detail-row"><span class="m-detail-label">技术提供方</span><span class="m-detail-val">{{ current.tech_provider || '-' }}</span></div>
+          <div class="m-detail-row"><span class="m-detail-label">实际使用方</span><span class="m-detail-val">{{ current.actual_user || '-' }}</span></div>
+        </div>
+        <div class="m-detail-section">
+          <div class="m-detail-title">产品信息</div>
+          <div class="m-detail-grid">
+            <div class="m-detail-cell"><span class="cell-l">带宽</span><span class="cell-v highlight">{{ current.bandwidth || '-' }}</span></div>
+            <div class="m-detail-cell"><span class="cell-l">月租</span><span class="cell-v highlight">¥{{ fmt(current.monthly_rent) }}</span></div>
+            <div class="m-detail-cell"><span class="cell-l">合作周期</span><span class="cell-v">{{ current.cooperation_period || '-' }}</span></div>
+            <div class="m-detail-cell"><span class="cell-l">国家</span><span class="cell-v">{{ current.country || '-' }}</span></div>
+          </div>
+        </div>
+        <div class="m-detail-section">
+          <div class="m-detail-title">时间信息</div>
+          <div class="m-detail-grid">
+            <div class="m-detail-cell"><span class="cell-l">合作日期</span><span class="cell-v">{{ current.cooperation_date || '-' }}</span></div>
+            <div class="m-detail-cell"><span class="cell-l">下个付款日</span><span class="cell-v">{{ current.next_payment_date || '-' }}</span></div>
+          </div>
+          <div class="m-detail-row"><span class="m-detail-label">经办人</span><span class="m-detail-val">{{ current.handler || '-' }}</span></div>
+          <div class="m-detail-row"><span class="m-detail-label">联系电话</span><span class="m-detail-val">{{ current.contact_phone || '无' }}</span></div>
+        </div>
+        <div class="m-detail-section" v-if="current.install_address">
+          <div class="m-detail-title">安装地址</div>
+          <div class="m-detail-row"><span class="m-detail-val addr">{{ current.install_address }}</span></div>
+        </div>
+      </div>
     </template>
   </el-dialog>
 </template>
@@ -570,4 +613,49 @@ function openDetail(row) {
 .order-sub { font-size: 12px; color: #909399; margin-top: 3px; }
 .col-light { font-size: 12px; color: #909399; margin-top: 2px; }
 .payment-urgent { color: #f56c6c; font-weight: 700; }
+
+/* ====== 移动端订单详情弹窗 ====== */
+.m-detail { padding-bottom: 4px; }
+.m-detail-section { margin-bottom: 16px; }
+.m-detail-section:last-child { margin-bottom: 0; }
+.m-detail-title {
+  font-size: 13px; font-weight: 600; color: #409eff;
+  margin-bottom: 10px; padding-left: 8px;
+  border-left: 3px solid #409eff;
+}
+.m-detail-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.m-detail-row:last-child { border-bottom: none; }
+.m-detail-label {
+  font-size: 13px; color: #909399; flex-shrink: 0; margin-right: 12px;
+}
+.m-detail-val {
+  font-size: 13.5px; color: #303133; text-align: right;
+  word-break: break-all;
+}
+.m-detail-val.mono { font-family: monospace; font-weight: 500; }
+.m-detail-val.addr { text-align: left; line-height: 1.5; }
+.m-detail-tag {
+  display: inline-block; padding: 2px 10px; border-radius: 10px;
+  font-size: 12px; font-weight: 600;
+}
+.tag-active { background: #ecf5ff; color: #409eff; }
+.tag-ended { background: #f4f4f5; color: #909399; }
+.m-detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  background: #fafbfc; border-radius: 10px; overflow: hidden;
+}
+.m-detail-cell {
+  padding: 11px 12px;
+  border-right: 1px solid #eee; border-bottom: 1px solid #eee;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.m-detail-cell:nth-child(2n) { border-right: none; }
+.m-detail-cell:nth-last-child(-n+2) { border-bottom: none; }
+.cell-l { font-size: 11.5px; color: #909399; }
+.cell-v { font-size: 14px; color: #303133; font-weight: 500; }
+.cell-v.highlight { color: #e6a23c; }
 </style>
