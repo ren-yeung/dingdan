@@ -509,14 +509,16 @@ function openDetail(row) {
 <style scoped>
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 
-/* 移动端标题行按钮：间距相同，下拉按人名自适应宽度 */
+/* 移动端标题行按钮：间距相同，下拉不超出屏幕 */
 .m-actions-3 {
   display: flex;
   gap: 8px;
   width: 66%;
+  min-width: 0;
 }
-.m-actions-3 :deep(.el-button) { flex: 1 1 0; }
-.m-actions-3 :deep(.el-select) { flex: 0 0 auto; min-width: 0; }
+.m-actions-3 :deep(.el-button) { flex: 1 1 0; min-width: 0; }
+.m-actions-3 :deep(.el-select) { flex: 1 1 0; min-width: 0; max-width: 130px; }
+.m-actions-3 :deep(.el-select .el-input__inner) { overflow: hidden; text-overflow: ellipsis; }
 
 /* 表单区块标题 */
 .form-section-title {
