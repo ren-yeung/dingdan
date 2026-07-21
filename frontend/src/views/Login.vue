@@ -223,8 +223,7 @@ async function onSubmit() {
   text-align: center;
   font-size: 11px;
   color: #a8abb2;
-  margin-top: auto;
-  padding-top: 18px;
+  margin-top: 22px;
   letter-spacing: 0.5px;
   position: relative;
   z-index: 1;
@@ -236,8 +235,9 @@ async function onSubmit() {
   .login-wrap {
     height: 100vh;
     height: 100dvh;
-    padding: 36px 22px calc(14px + env(safe-area-inset-bottom));
+    padding: 24px 22px calc(16px + env(safe-area-inset-bottom));
     justify-content: center;
+    gap: 0;
   }
   .login-brand { margin-bottom: 22px; }
   .brand-avatar svg { width: 56px; height: 56px; }
@@ -251,7 +251,11 @@ async function onSubmit() {
   .login-form :deep(.el-form-item) { margin-bottom: 14px; }
   .form-extra { margin-bottom: 16px; }
   .btn-login { height: 40px; font-size: 13px; letter-spacing: 4px; }
-  .login-footer { margin-top: auto; padding-top: 12px; font-size: 10px; }
+  .login-footer {
+    margin-top: 22px;
+    padding-top: 0;
+    font-size: 10px;
+  }
 }
 
 /* 禁用整个页面的滚动 */
