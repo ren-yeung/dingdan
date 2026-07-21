@@ -313,42 +313,43 @@ app.post('/orders/convert', async (c) => {
 })
 
 // ---------- 看板 ----------
+// 看板短期内存缓存：同 isolate 内复用，避免重复聚合与串行查询
+const dashboardCache = new Map()
+const DASHBOARD_TTL = 30 * 1000
+
 app.get('/dashboard', async (c) => {
   const db = c.env.DB
   const month = c.req.query('month') || currentMonth()
   const like = month + '%'
 
-  const inMonth = await all(db, "SELECT * FROM orders WHERE cooperation_date IS NOT NULL AND cooperation_date LIKE ?", [like])
-  const totalPerformance = inMonth.reduce((s, o) => s + (Number(o.monthly_rent) || 0), 0)
-  const totalOrders = inMonth.length
-  const totalOpp = (await get(db, "SELECT COUNT(*) AS c FROM opportunities WHERE created_at LIKE ?", [like])).c
+  // 命中缓存直接返回（30s 内不发任何查询）
+  const hit = dashboardCache.get(month)
+  if (hit && Date.now() - hit.ts < DASHBOARD_TTL) {
+    return c.json(hit.data)
+  }
 
-  const ranking = await all(
-    db,
-    `SELECT u.id AS user_id, u.name, COALESCE(SUM(o.monthly_rent),0) AS performance, COUNT(o.id) AS order_count
-     FROM users u LEFT JOIN orders o ON o.owner_id=u.id AND o.cooperation_date LIKE ?
-     WHERE u.role='sales' GROUP BY u.id ORDER BY performance DESC`,
-    [like]
-  )
+  // 5 个查询并行执行 + 聚合下沉到 SQL，避免串行与全表拉取
+  const [agg, oppCount, ranking, recentOrders, recentOpp] = await Promise.all([
+    get(db, "SELECT COALESCE(SUM(monthly_rent),0) AS total_performance, COUNT(*) AS total_orders FROM orders WHERE cooperation_date IS NOT NULL AND cooperation_date LIKE ?", [like]),
+    get(db, "SELECT COUNT(*) AS c FROM opportunities WHERE created_at LIKE ?", [like]),
+    all(db, `SELECT u.id AS user_id, u.name, COALESCE(SUM(o.monthly_rent),0) AS performance, COUNT(o.id) AS order_count
+            FROM users u LEFT JOIN orders o ON o.owner_id=u.id AND o.cooperation_date LIKE ?
+            WHERE u.role='sales' GROUP BY u.id ORDER BY performance DESC`, [like]),
+    all(db, 'SELECT o.*, u.name AS owner_name FROM orders o LEFT JOIN users u ON u.id=o.owner_id ORDER BY o.created_at DESC LIMIT 8'),
+    all(db, 'SELECT o.*, u.name AS submitter_name FROM opportunities o LEFT JOIN users u ON u.id=o.submitter_id ORDER BY o.created_at DESC LIMIT 8')
+  ])
 
-  const recentOrders = await all(
-    db,
-    'SELECT o.*, u.name AS owner_name FROM orders o LEFT JOIN users u ON u.id=o.owner_id ORDER BY o.created_at DESC LIMIT 8'
-  )
-  const recentOpp = await all(
-    db,
-    'SELECT o.*, u.name AS submitter_name FROM opportunities o LEFT JOIN users u ON u.id=o.submitter_id ORDER BY o.created_at DESC LIMIT 8'
-  )
-
-  return c.json({
+  const data = {
     month,
-    total_performance: totalPerformance,
-    total_orders: totalOrders,
-    total_opportunities: totalOpp,
+    total_performance: Number(agg.total_performance) || 0,
+    total_orders: agg.total_orders || 0,
+    total_opportunities: oppCount.c || 0,
     ranking,
     recent_orders: recentOrders,
     recent_opportunities: recentOpp
-  })
+  }
+  dashboardCache.set(month, { ts: Date.now(), data })
+  return c.json(data)
 })
 
 // ---------- 系统设置 ----------

@@ -90,6 +90,41 @@
       <el-date-picker v-model="month" type="month" value-format="YYYY-MM" size="small" @change="load" />
     </div>
 
+    <!-- 加载骨架屏：避免空白等待，命中缓存时不会出现 -->
+    <template v-if="loading">
+      <div class="m-skel-hero">
+        <div class="sk-line w50"></div>
+        <div class="sk-line w70 big mt"></div>
+        <div class="m-skel-stats">
+          <div class="m-skel-stat"><div class="sk-line w45"></div><div class="sk-line w30 mt"></div></div>
+          <div class="m-skel-stat"><div class="sk-line w45"></div><div class="sk-line w30 mt"></div></div>
+        </div>
+      </div>
+
+      <div class="m-section-title">销售排行</div>
+      <div class="m-card">
+        <div class="sk-line w80 mb"></div>
+        <div class="sk-line w90 mb"></div>
+        <div class="sk-line w65"></div>
+      </div>
+
+      <div class="m-section-title">最近商机</div>
+      <div class="m-card">
+        <div class="sk-line w90 mb"></div>
+        <div class="sk-line w80 mb"></div>
+        <div class="sk-line w60"></div>
+      </div>
+
+      <div class="m-section-title">最近订单</div>
+      <div class="m-card">
+        <div class="sk-line w90 mb"></div>
+        <div class="sk-line w80 mb"></div>
+        <div class="sk-line w60"></div>
+      </div>
+    </template>
+
+    <!-- 真实内容 -->
+    <template v-else>
     <div class="m-hero">
       <div class="m-hero-label">本月总业绩（月租合计）</div>
       <div class="m-hero-value">¥ {{ fmtNum(dashboard.total_performance) }}</div>
@@ -144,6 +179,7 @@
         <div class="m-row-meta">{{ o.owner_name }} · ¥{{ fmtNum(o.monthly_rent) }}/月</div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
@@ -156,6 +192,7 @@ import { useDevice } from '../composables/useDevice'
 const { isMobile } = useDevice()
 
 const month = ref(curMonth())
+const loading = ref(false)
 const dashboard = ref({
   month: month.value,
   total_performance: 0,
@@ -165,6 +202,25 @@ const dashboard = ref({
   recent_orders: [],
   recent_opportunities: []
 })
+
+// 看板客户端缓存（按月份 key，30s 内重复进入秒开）
+const DASH_CACHE_KEY = 'erp_dashboard_cache'
+const DASH_CACHE_TTL = 30 * 1000
+function readDashCache(m) {
+  try {
+    const map = JSON.parse(localStorage.getItem(DASH_CACHE_KEY) || '{}')
+    const item = map[m]
+    if (item && Date.now() - item.ts < DASH_CACHE_TTL) return item.data
+  } catch (e) {}
+  return null
+}
+function writeDashCache(m, data) {
+  try {
+    const map = JSON.parse(localStorage.getItem(DASH_CACHE_KEY) || '{}')
+    map[m] = { ts: Date.now(), data }
+    localStorage.setItem(DASH_CACHE_KEY, JSON.stringify(map))
+  } catch (e) {}
+}
 
 function curMonth() {
   const d = new Date()
@@ -205,11 +261,21 @@ function initial(s) {
 }
 
 async function load() {
+  // 命中客户端缓存：立即渲染，无需请求
+  const cached = readDashCache(month.value)
+  if (cached) {
+    dashboard.value = cached
+    return
+  }
+  loading.value = true
   try {
     const { data } = await api.get('/dashboard', { params: { month: month.value } })
     dashboard.value = data
+    writeDashCache(month.value, data)
   } catch (e) {
     // token 无效时拦截器已处理跳转，此处静默忽略
+  } finally {
+    loading.value = false
   }
 }
 onMounted(load)
@@ -238,4 +304,25 @@ onMounted(load)
 .rank-val { width: 150px; text-align: right; font-size: 12px; color: #606266; }
 .empty { color: #909399; text-align: center; padding: 30px 0; }
 .stacked { margin-bottom: 16px; }
+
+/* 移动端加载骨架屏 */
+.m-skel-hero {
+  background: #fff; border-radius: 20px; padding: 20px 18px; margin-bottom: 12px;
+  box-shadow: 0 4px 18px rgba(31, 45, 61, 0.07);
+}
+.m-skel-hero .m-skel-stats { display: flex; gap: 10px; margin-top: 16px; }
+.m-skel-stat { flex: 1; background: #f4f6f9; border-radius: 12px; padding: 10px 12px; }
+.sk-line {
+  height: 14px; border-radius: 8px;
+  background: linear-gradient(90deg, #eef1f5 25%, #e3e8ef 37%, #eef1f5 63%);
+  background-size: 400% 100%;
+  animation: sk-shimmer 1.4s ease infinite;
+}
+.sk-line.big { height: 28px; }
+.sk-line.w30 { width: 30%; } .sk-line.w45 { width: 45%; } .sk-line.w50 { width: 50%; }
+.sk-line.w60 { width: 60%; } .sk-line.w65 { width: 65%; } .sk-line.w70 { width: 70%; }
+.sk-line.w80 { width: 80%; } .sk-line.w90 { width: 90%; }
+.sk-line.mt { margin-top: 8px; }
+.sk-line.mb { margin-bottom: 12px; }
+@keyframes sk-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
 </style>
