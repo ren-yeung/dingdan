@@ -39,12 +39,6 @@
         </div>
 
         <el-button type="primary" size="large" class="btn-login" :loading="loading" @click="onSubmit">登 录</el-button>
-
-        <!-- 手机登录（暂未实现） -->
-        <button class="btn-phone" @click.prevent>手机登录</button>
-
-        <!-- 注册（暂未实现） -->
-        <button class="btn-reg" @click.prevent>注 册</button>
       </el-form>
     </div>
 
@@ -97,30 +91,30 @@ async function onSubmit() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(160deg, #0f172a 0%, #1e293b 35%, #1e3a5f 70%, #0f2942 100%);
+  background: linear-gradient(160deg, #e9eef5 0%, #e2e8f1 50%, #dde6f0 100%);
   padding: 32px 28px;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
 }
 
-/* 背景装饰光晕 */
+/* 背景柔光装饰 */
 .login-wrap::before {
   content: '';
   position: absolute;
-  top: -80px; right: -60px;
-  width: 260px; height: 260px;
+  top: -60px; right: -50px;
+  width: 240px; height: 240px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(64,158,255,.14), transparent 70%);
+  background: radial-gradient(circle, rgba(64,158,255,.10), transparent 70%);
   pointer-events: none;
 }
 .login-wrap::after {
   content: '';
   position: absolute;
-  bottom: -100px; left: -80px;
-  width: 300px; height: 300px;
+  bottom: -80px; left: -60px;
+  width: 280px; height: 280px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(103,194,58,.09), transparent 70%);
+  background: radial-gradient(circle, rgba(103,194,58,.07), transparent 70%);
   pointer-events: none;
 }
 
@@ -141,18 +135,18 @@ async function onSubmit() {
 .brand-avatar svg {
   width: 64px;
   height: 64px;
-  filter: drop-shadow(0 8px 24px rgba(64,158,255,.35));
+  filter: drop-shadow(0 8px 20px rgba(64,158,255,.25));
 }
 .brand-title {
   font-size: 20px;
   font-weight: 700;
-  color: #fff;
+  color: #1f2d3d;
   letter-spacing: 1px;
   margin: 0 0 4px;
 }
 .brand-sub {
   font-size: 12px;
-  color: rgba(255,255,255,.42);
+  color: #909399;
   margin: 0;
   letter-spacing: 0.5px;
 }
@@ -161,13 +155,10 @@ async function onSubmit() {
 .login-form {
   width: 100%;
   max-width: 380px;
-  background: rgba(255,255,255,.95);
+  background: #fff;
   border-radius: 16px;
   padding: 26px 24px 22px;
-  box-shadow:
-    0 20px 60px rgba(0,0,0,.30),
-    0 0 0 1px rgba(255,255,255,.08) inset;
-  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 40px rgba(31, 45, 61, .10);
   position: relative;
   z-index: 1;
   flex-shrink: 0;
@@ -227,49 +218,11 @@ async function onSubmit() {
   box-shadow: 0 2px 8px rgba(64,158,255,.20);
 }
 
-/* 手机登录按钮（绿色描边） */
-.btn-phone {
-  width: 100%;
-  height: 44px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #67c23a;
-  background: #fff;
-  border: 1.5px solid #67c23a;
-  margin-top: 12px;
-  cursor: pointer;
-  transition: background .2s, color .2s;
-  letter-spacing: 2px;
-}
-.btn-phone:active {
-  background: #f0f9eb;
-}
-
-/* 注册按钮（灰色描边） */
-.btn-reg {
-  width: 100%;
-  height: 44px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #909399;
-  background: #fff;
-  border: 1.5px solid #dcdfe6;
-  margin-top: 12px;
-  cursor: pointer;
-  transition: background .2s, color .2s;
-  letter-spacing: 2px;
-}
-.btn-reg:active {
-  background: #f5f7fa;
-}
-
 /* 底部版权 */
 .login-footer {
   text-align: center;
   font-size: 11px;
-  color: rgba(255,255,255,.22);
+  color: #a8abb2;
   margin-top: auto;
   padding-top: 18px;
   letter-spacing: 0.5px;
@@ -297,12 +250,7 @@ async function onSubmit() {
   }
   .login-form :deep(.el-form-item) { margin-bottom: 14px; }
   .form-extra { margin-bottom: 16px; }
-  .btn-login,
-  .btn-phone,
-  .btn-reg { height: 40px; font-size: 13px; }
-  .btn-login { letter-spacing: 4px; }
-  .btn-phone,
-  .btn-reg { margin-top: 10px; letter-spacing: 2px; }
+  .btn-login { height: 40px; font-size: 13px; letter-spacing: 4px; }
   .login-footer { margin-top: auto; padding-top: 12px; font-size: 10px; }
 }
 
