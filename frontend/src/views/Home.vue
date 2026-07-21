@@ -41,7 +41,7 @@
 
     <el-row :gutter="16" class="cards">
       <el-col :span="14">
-        <el-card shadow="hover" header="历史销售排行（按单量）">
+        <el-card shadow="hover" header="历史销售排行">
           <div v-if="dashboard.ranking.length === 0" class="empty">暂无订单</div>
           <div v-for="(r, i) in dashboard.ranking" :key="r.user_id" class="rank-row">
             <span class="rank-no" :class="{ top: i < 3 }">{{ i + 1 }}</span>
