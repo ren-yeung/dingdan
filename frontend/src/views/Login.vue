@@ -214,7 +214,8 @@ async function onSubmit() {
 /* 移动端适配 */
 @media (max-width: 768px) {
   .login-wrap {
-    padding: 24px 22px calc(16px + env(safe-area-inset-bottom));
+    padding: 7vh 22px calc(15vh + env(safe-area-inset-bottom));
+    justify-content: center;
   }
   .login-brand { margin-bottom: 22px; }
   .brand-avatar { width: 56px; height: 56px; margin-bottom: 10px; }
