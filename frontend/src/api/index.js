@@ -16,9 +16,11 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response && err.response.status === 401) {
-      // 登录过期，回到登录页
+      // 登录过期，回到登录页，同时清掉两种存储
       localStorage.removeItem('erp_token')
       localStorage.removeItem('erp_user')
+      sessionStorage.removeItem('erp_token')
+      sessionStorage.removeItem('erp_user')
       window.location.hash = '#/login'
     }
     return Promise.reject(err)

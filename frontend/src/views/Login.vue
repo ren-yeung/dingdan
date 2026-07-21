@@ -37,6 +37,8 @@ import { User, Lock } from '@element-plus/icons-vue'
 import api from '../api'
 import { setAuth } from '../store/auth'
 
+const REMEMBER_KEY = 'erp_remember_user'
+
 const router = useRouter()
 const form = ref({ username: '', password: '' })
 const loading = ref(false)
@@ -51,6 +53,12 @@ const rules = {
 // 安全地禁止滚动：挂载时加 class，卸载时移除，不用全局 has 选择器
 onMounted(() => {
   document.documentElement.classList.add('login-page-active')
+  // 回填上次记住的用户名，并自动勾选
+  const saved = localStorage.getItem(REMEMBER_KEY)
+  if (saved) {
+    form.value.username = saved
+    rememberMe.value = true
+  }
 })
 onUnmounted(() => {
   document.documentElement.classList.remove('login-page-active')
@@ -62,7 +70,14 @@ async function onSubmit() {
     loading.value = true
     try {
       const { data } = await api.post('/login', form.value)
-      setAuth(data.token, data.user)
+      // 勾选则登录态持久化（localStorage），否则仅本次会话（sessionStorage）
+      setAuth(data.token, data.user, rememberMe.value)
+      // 单独记住用户名（下次自动填）
+      if (rememberMe.value) {
+        localStorage.setItem(REMEMBER_KEY, form.value.username)
+      } else {
+        localStorage.removeItem(REMEMBER_KEY)
+      }
       router.push('/home')
     } catch (e) {
       const msg = e.response && e.response.data && e.response.data.detail ? e.response.data.detail : '登录失败'
