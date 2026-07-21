@@ -21,7 +21,7 @@
     <el-row :gutter="16" class="cards">
       <el-col :span="8">
         <el-card shadow="hover" class="stat brand-stat">
-          <div class="stat-label">月度总业绩（季付×3）</div>
+          <div class="stat-label">月度总业绩</div>
           <div class="stat-value">¥ {{ fmtNum(dashboard.total_performance) }}</div>
         </el-card>
       </el-col>
@@ -126,7 +126,7 @@
     <!-- 真实内容 -->
     <template v-else>
     <div class="m-hero">
-      <div class="m-hero-label">本月总业绩（季付×3）</div>
+      <div class="m-hero-label">本月总业绩</div>
       <div class="m-hero-value">¥ {{ fmtNum(dashboard.total_performance) }}</div>
       <div class="m-hero-stats">
         <div class="m-hero-stat"><div class="v">{{ dashboard.total_orders }}</div><div class="l">签约订单</div></div>
