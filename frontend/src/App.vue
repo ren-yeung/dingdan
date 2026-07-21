@@ -256,6 +256,7 @@ body {
   /* —— 空状态 —— */
   .m-empty { text-align: center; padding: 44px 0; color: #a8b0bd; }
   .m-empty .ic { font-size: 40px; opacity: .45; }
+  .m-empty .ic img { width: 40px; height: 40px; display: inline-block; }
   .m-empty .tx { font-size: 13px; margin-top: 10px; }
 }
 </style>

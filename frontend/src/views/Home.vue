@@ -137,7 +137,7 @@
     <div class="m-section-title">历史销售排行</div>
     <div class="m-card">
       <div v-if="dashboard.ranking.length === 0" class="m-empty">
-        <div class="ic"><el-icon><DataLine /></el-icon></div>
+        <div class="ic"><img class="m-empty-img" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23909' stroke-width='2'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M7 16l4-4 4 4 5-6'/%3E%3C/svg%3E"/></div>
         <div class="tx">暂无订单</div>
       </div>
       <div v-for="(r, i) in dashboard.ranking" :key="r.user_id" class="m-rank">

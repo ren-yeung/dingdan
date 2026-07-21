@@ -54,7 +54,7 @@
   <!-- 移动端：底部导航专属布局 -->
   <div v-else class="m-shell">
     <header class="m-topbar">
-      <span class="m-brand"><span class="m-logo"><el-icon><Connection /></el-icon></span>翼嘉 · 天耘 ERP</span>
+      <span class="m-brand"><span class="m-logo"><img class="m-logo-img" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23fff' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/%3E%3C/svg%3E"/></span>翼嘉 · 天耘 ERP</span>
       <span class="m-logout" @click="onLogout">退出</span>
     </header>
     <div class="m-content">
@@ -215,6 +215,9 @@ function onLogout() {
   position: sticky; top: 0; z-index: 20;
 }
 .m-brand { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 16px; color: #1f2d3d; letter-spacing: .3px; }
+.m-logo-img {
+  width: 16px; height: 16px; display: block;
+}
 .m-logo {
   width: 28px; height: 28px; border-radius: 8px;
   background: linear-gradient(135deg, #409eff, #67c23a);
