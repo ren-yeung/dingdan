@@ -126,7 +126,6 @@ body {
   .m-page { padding: 14px 14px 28px; }
   .m-head { display: flex; align-items: center; justify-content: space-between; margin: 2px 2px 16px; }
   .m-head-actions { display: flex; gap: 8px; }
-  .m-sales-filter { margin-bottom: 12px; }
   .m-title { font-size: 21px; font-weight: 800; color: #1f2d3d; letter-spacing: .3px; }
 
   .m-section-title {

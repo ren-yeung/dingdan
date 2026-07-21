@@ -82,14 +82,12 @@
     <div class="m-head">
       <div class="m-title">订单</div>
       <div class="m-head-actions">
+        <el-select v-if="showSalesFilter" v-model="salesFilter" placeholder="全部销售" clearable size="small" style="width: 110px; flex-shrink: 0" @change="load">
+          <el-option v-for="u in salesUsers" :key="u.id" :label="u.name" :value="u.id" />
+        </el-select>
         <el-button type="success" size="small" :icon="Switch" v-if="isAdmin" @click="openConvert">转正式</el-button>
         <el-button type="primary" size="small" :icon="Plus" v-if="isAdmin" @click="openNew">新建</el-button>
       </div>
-    </div>
-    <div v-if="showSalesFilter" class="m-sales-filter">
-      <el-select v-model="salesFilter" placeholder="全部销售" clearable size="small" style="width: 100%" @change="load">
-        <el-option v-for="u in salesUsers" :key="u.id" :label="u.name" :value="u.id" />
-      </el-select>
     </div>
     <div class="m-chips">
       <span
