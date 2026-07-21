@@ -367,7 +367,7 @@ app.get('/dashboard', async (c) => {
 
 // ---------- 系统设置 ----------
 app.get('/users', async (c) => {
-  if (c.get('user').role !== 'admin') return c.json({ detail: '无权限' }, 403)
+  if (!['admin','manager'].includes(c.get('user').role)) return c.json({ detail: '无权限' }, 403)
   return c.json(await all(c.env.DB, 'SELECT id, username, name, role FROM users ORDER BY id'))
 })
 
