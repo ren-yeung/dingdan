@@ -517,7 +517,7 @@ function openDetail(row) {
   min-width: 0;
 }
 .m-actions-3 :deep(.el-button) { flex: 1 1 0; min-width: 0; }
-.m-actions-3 :deep(.el-select) { flex: 1 1 0; min-width: 0; max-width: 130px; }
+.m-actions-3 :deep(.el-select) { flex: 1 1 0; min-width: 0; }
 .m-actions-3 :deep(.el-select .el-input__inner) { overflow: hidden; text-overflow: ellipsis; }
 
 /* 表单区块标题 */
