@@ -278,6 +278,12 @@
         <el-col :span="12"><el-form-item label="合作国家"><el-input v-model="editForm.country" placeholder="如 美国" /></el-form-item></el-col>
       </el-row>
 
+      <!-- 设备信息 -->
+      <div class="form-section-title"><span class="section-dot"></span>设备信息</div>
+      <el-row :gutter="16">
+        <el-col :span="12"><el-form-item label="设备编号"><el-input v-model="editForm.device_no" placeholder="如 DEV-001" /></el-form-item></el-col>
+      </el-row>
+
       <!-- 客户信息 -->
       <div class="form-section-title"><span class="section-dot"></span>客户信息</div>
       <el-row :gutter="16">
