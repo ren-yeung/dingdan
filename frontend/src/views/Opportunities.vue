@@ -194,7 +194,8 @@
   </el-dialog>
 
   <!-- 详情对话框 -->
-  <el-dialog title="测试需求详情" v-model="detailVisible" width="720px">
+  <!-- 商机详情 - 桌面 -->
+  <el-dialog v-if="!isMobile" title="测试需求详情" v-model="detailVisible" width="720px">
     <template v-if="current">
       <el-descriptions :column="2" border>
         <el-descriptions-item label="公司名称">{{ current.company_name }}</el-descriptions-item>
@@ -213,6 +214,41 @@
       <el-alert v-if="current.admin_reply" type="info" :closable="false" style="margin-top: 14px">
         <template #title>审核回复：{{ current.admin_reply }}</template>
       </el-alert>
+    </template>
+  </el-dialog>
+
+  <!-- 商机详情 - 移动端 -->
+  <el-dialog v-else title="测试需求详情" v-model="detailVisible" width="90%" class="m-detail-dlg">
+    <template v-if="current">
+      <div class="m-detail">
+        <div class="m-detail-section">
+          <div class="m-detail-head">
+            <span class="m-detail-company">{{ current.company_name }}</span>
+            <el-tag :type="statusType(current.status)" size="small">{{ statusLabel(current.status) }}</el-tag>
+          </div>
+          <div class="m-detail-row"><span class="m-detail-label">提交人</span><span class="m-detail-val">{{ current.submitter_name }}</span></div>
+          <div class="m-detail-row"><span class="m-detail-label">经办人</span><span class="m-detail-val">{{ current.handler }}</span></div>
+          <div class="m-detail-row"><span class="m-detail-label">电话</span><span class="m-detail-val">{{ current.phone }}</span></div>
+        </div>
+        <div class="m-detail-section">
+          <div class="m-detail-title">需求信息</div>
+          <div class="m-detail-grid">
+            <div class="m-detail-cell"><span class="cell-l">需求带宽</span><span class="cell-v highlight">{{ current.bandwidth }}</span></div>
+            <div class="m-detail-cell"><span class="cell-l">需求国家</span><span class="cell-v highlight">{{ current.country }}</span></div>
+            <div class="m-detail-cell"><span class="cell-l">本地运营商</span><span class="cell-v">{{ current.local_operator }}</span></div>
+            <div class="m-detail-cell"><span class="cell-l">电话</span><span class="cell-v">{{ current.phone }}</span></div>
+          </div>
+        </div>
+        <div class="m-detail-section">
+          <div class="m-detail-title">地址与网站</div>
+          <div class="m-detail-row"><span class="m-detail-label">安装地址</span><span class="m-detail-val addr">{{ current.install_address }}</span></div>
+          <div class="m-detail-row"><span class="m-detail-label">访问网站</span><span class="m-detail-val addr">{{ current.website }}</span></div>
+        </div>
+        <div class="m-detail-section" v-if="current.admin_reply">
+          <div class="m-detail-title">审核回复</div>
+          <div class="m-detail-reply">{{ current.admin_reply }}</div>
+        </div>
+      </div>
     </template>
   </el-dialog>
 </template>
@@ -386,4 +422,52 @@ async function submitReview() {
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .opp-form { padding-top: 8px; }
 .opp-form .el-form-item { margin-bottom: 18px; }
+
+/* ====== 移动端商机详情弹窗（与订单详情同款卡片分组） ====== */
+.m-detail { padding-bottom: 4px; }
+.m-detail-section { margin-bottom: 16px; }
+.m-detail-section:last-child { margin-bottom: 0; }
+.m-detail-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 10px; margin-bottom: 4px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.m-detail-company { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+.m-detail-title {
+  font-size: 13px; font-weight: 600; color: #409eff;
+  margin-bottom: 10px; padding-left: 8px;
+  border-left: 3px solid #409eff;
+}
+.m-detail-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.m-detail-row:last-child { border-bottom: none; }
+.m-detail-label {
+  font-size: 13px; color: #909399; flex-shrink: 0; margin-right: 12px;
+}
+.m-detail-val {
+  font-size: 13.5px; color: #303133; text-align: right;
+  word-break: break-all;
+}
+.m-detail-val.addr { text-align: left; line-height: 1.5; }
+.m-detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  background: #fafbfc; border-radius: 10px; overflow: hidden;
+}
+.m-detail-cell {
+  padding: 11px 12px;
+  border-right: 1px solid #eee; border-bottom: 1px solid #eee;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.m-detail-cell:nth-child(2n) { border-right: none; }
+.m-detail-cell:nth-last-child(-n+2) { border-bottom: none; }
+.cell-l { font-size: 11.5px; color: #909399; }
+.cell-v { font-size: 14px; color: #303133; font-weight: 500; }
+.cell-v.highlight { color: #e6a23c; }
+.m-detail-reply {
+  background: #f4f8ff; border: 1px solid #e3edff; border-radius: 10px;
+  padding: 11px 12px; font-size: 13.5px; color: #303133; line-height: 1.6;
+}
 </style>
