@@ -23,7 +23,7 @@ function genOrderNo() {
 // ---------- 鉴权中间件 ----------
 app.use('*', async (c, next) => {
   const path = c.req.path
-  if (path === '/api/login' || path === '/api/health' || path === '/api/debug/db' || path === '/api/debug/token' || path === '/api/debug/reseed') return next()
+  if (path === '/api/login' || path === '/api/health' || path === '/api/debug/db' || path === '/api/debug/token' || path === '/api/debug/reseed' || path === '/api/cron/check-payments') return next()
   const h = c.req.header('Authorization') || ''
   const token = h.startsWith('Bearer ') ? h.slice(7) : ''
   if (!token) return c.json({ detail: '未登录' }, 401)
@@ -476,15 +476,19 @@ export async function onRequest(context) {
 }
 
 // ---------- 定时任务：提前7天推送付款提醒到微信(PushPlus) ----------
-// 由 Cloudflare Pages Cron 触发（wrangler.toml [triggers] crons，每天北京09:00）
-export async function scheduled(event, env) {
-  const token = env.PUSHPLUS_TOKEN
-  if (!token) {
-    console.warn('[cron] PUSHPLUS_TOKEN 未配置，跳过付款提醒推送')
-    return
-  }
+// Pages Functions 不支持原生 Cron，改为 HTTP 接口，由 GitHub Actions / cron-job.org 每天调用
+app.post('/cron/check-payments', async (c) => {
+  // 双重保护：CRON_SECRET 不匹配直接拒绝，避免被任意调用刷微信
+  const auth = c.req.header('Authorization') || ''
+  const secret = auth.startsWith('Bearer ') ? auth.slice(7) : ''
+  const expected = c.env.CRON_SECRET || ''
+  if (!expected || secret !== expected) return c.json({ detail: 'forbidden' }, 403)
+
+  const token = c.env.PUSHPLUS_TOKEN
+  if (!token) return c.json({ ok: false, skipped: 'PUSHPLUS_TOKEN 未配置' }, 200)
+
   try {
-    const db = env.DB
+    const db = c.env.DB
     const rows = await all(db, `
       SELECT o.order_no, o.actual_user, o.party_a, o.bandwidth, o.monthly_rent, o.next_payment_date, u.name AS owner_name
       FROM orders o LEFT JOIN users u ON u.id = o.owner_id
@@ -492,7 +496,8 @@ export async function scheduled(event, env) {
         AND date(o.next_payment_date) BETWEEN date('now','+8 hours') AND date('now','+8 hours','+7 days')
       ORDER BY o.next_payment_date ASC
     `)
-    if (!rows.length) return
+    if (!rows.length) return c.json({ ok: true, sent: 0 })
+
     const today = new Date()
     const items = rows.map(r => {
       const due = new Date(r.next_payment_date + 'T00:00:00')
@@ -509,8 +514,9 @@ export async function scheduled(event, env) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, title: '📅 订单付款提醒（7天内）', content, template: 'html' })
     })
-    if (!resp.ok) console.warn('[cron] PushPlus 推送失败', resp.status, await resp.text())
+    if (!resp.ok) return c.json({ ok: false, error: 'PushPlus 推送失败 ' + resp.status, detail: await resp.text() }, 502)
+    return c.json({ ok: true, sent: rows.length })
   } catch (e) {
-    console.error('[cron] 付款提醒任务异常', e)
+    return c.json({ ok: false, error: e.message || String(e) }, 500)
   }
-}
+})

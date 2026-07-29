@@ -18,7 +18,9 @@ bucket_name = "yijia-erp-uploads"
 [vars]
 JWT_SECRET = "5f863cc9d8a81d3a97f7a02416d089c54a37342cf7a8269045f326b5e187f248"
 
-# 定时任务：每天北京时间 09:00 巡检未来7天内到期的订单并推送微信(PushPlus)
-# 表达式使用 UTC：01:00 UTC = 09:00 北京时间
-[triggers]
-crons = ["0 1 * * *"]
+# 定时任务（付款提醒）说明：
+# Pages Functions 不支持原生 Cron，做法是后端暴露 POST /api/cron/check-payments
+# （需带 Authorization: Bearer <CRON_SECRET>），由 GitHub Actions / cron-job.org 每天调用。
+# 以下两个密钥请在 Cloudflare 控制台 Settings → Environment variables 配置：
+#   PUSHPLUS_TOKEN = PushPlus 用户 Token（发微信用）
+#   CRON_SECRET    = 任意随机串，作为接口调用口令（与 GitHub Actions secret 保持一致）
