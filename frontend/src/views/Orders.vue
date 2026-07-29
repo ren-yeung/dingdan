@@ -133,7 +133,7 @@
           </el-tag>
         </div>
         <div class="m-card-meta">{{ row.bandwidth }} · ¥{{ fmt(row.monthly_rent) }}/月 · {{ row.cooperation_date }}</div>
-        <div class="m-card-meta m-muted">归属 {{ row.owner_name }} · {{ row.country }}</div>
+        <div class="m-card-meta m-muted">归属 {{ row.owner_name }} · {{ row.country }} · 设备 {{ row.device_no || '无' }}</div>
         <div v-if="row.next_payment_date" class="m-pay" :class="{ urgent: isPaymentUrgent(row.next_payment_date) }">
           <el-icon><Calendar /></el-icon> 下次付款 {{ row.next_payment_date }}
         </div>
