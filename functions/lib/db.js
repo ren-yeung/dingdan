@@ -82,6 +82,9 @@ export async function ensureSchema(db) {
     try { await db.prepare('ALTER TABLE ' + t + ' DROP COLUMN active').run() }
     catch (e) { /* 列不存在或 D1 不支持则忽略 */ }
   }
+  // 新增设备编号字段（订单归属设备），旧表通过 ALTER 迁移
+  try { await db.prepare('ALTER TABLE orders ADD COLUMN device_no TEXT NOT NULL DEFAULT \'\'').run() }
+  catch (e) { /* 列已存在则忽略 */ }
 }
 
 // 仅在表空时种子；绝不自动删重建（D1 同请求内写后读可能不一致，会导致中间件查不到用户）

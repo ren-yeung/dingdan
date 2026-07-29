@@ -211,7 +211,7 @@ app.post('/opportunities/:id/review', async (c) => {
 const ORDER_COLS = [
   'party_a', 'party_b', 'tech_provider', 'bandwidth', 'monthly_rent', 'cooperation_period',
   'cooperation_date', 'actual_user', 'handler', 'contact_phone', 'install_address',
-  'country', 'next_payment_date', 'owner_id', 'status'
+  'country', 'next_payment_date', 'owner_id', 'status', 'device_no'
 ]
 
 app.get('/orders', async (c) => {
@@ -306,7 +306,8 @@ app.post('/orders/convert', async (c) => {
     country: b.country || opp.country || '',
     next_payment_date: b.next_payment_date || b.cooperation_date || '',
     owner_id: b.owner_id || opp.submitter_id,
-    status: b.status || 'active'
+    status: b.status || 'active',
+    device_no: b.device_no || ''
   }
   const cols = Object.keys(vals)
   const sql = 'INSERT INTO orders (' + cols.join(',') + ', order_no) VALUES (' + cols.map(() => '?').join(',') + ', ?)'

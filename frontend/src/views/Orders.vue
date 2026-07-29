@@ -173,6 +173,12 @@
         <el-col :span="12"><el-form-item label="合作国家"><el-input v-model="convForm.country" placeholder="如 美国" /></el-form-item></el-col>
       </el-row>
 
+      <!-- 设备信息 -->
+      <div class="form-section-title"><span class="section-dot"></span>设备信息</div>
+      <el-row :gutter="16">
+        <el-col :span="24"><el-form-item label="设备编号"><el-input v-model="convForm.device_no" placeholder="如 DEV-001" /></el-form-item></el-col>
+      </el-row>
+
       <!-- 客户信息 -->
       <div class="form-section-title"><span class="section-dot"></span>客户信息<span class="section-hint">（来自测试需求，可修改）</span></div>
       <el-row :gutter="16">
@@ -219,6 +225,12 @@
         <el-col :span="12"><el-form-item label="月租(元)"><el-input v-model.number="newForm.monthly_rent" type="number" /></el-form-item></el-col>
         <el-col :span="12"><el-form-item label="合作周期"><el-input v-model="newForm.cooperation_period" /></el-form-item></el-col>
         <el-col :span="12"><el-form-item label="合作国家"><el-input v-model="newForm.country" placeholder="如 美国" /></el-form-item></el-col>
+      </el-row>
+
+      <!-- 设备信息 -->
+      <div class="form-section-title"><span class="section-dot"></span>设备信息</div>
+      <el-row :gutter="16">
+        <el-col :span="24"><el-form-item label="设备编号"><el-input v-model="newForm.device_no" placeholder="如 DEV-001" /></el-form-item></el-col>
       </el-row>
 
       <!-- 客户信息 -->
@@ -311,6 +323,7 @@
         <el-descriptions-item label="下个付款日">{{ current.next_payment_date }}</el-descriptions-item>
         <el-descriptions-item label="归属">{{ current.owner_name }}</el-descriptions-item>
         <el-descriptions-item label="合作国家">{{ current.country }}</el-descriptions-item>
+        <el-descriptions-item label="设备编号">{{ current.device_no || '-' }}</el-descriptions-item>
         <el-descriptions-item label="安装地址" :span="2">{{ current.install_address }}</el-descriptions-item>
       </el-descriptions>
     </template>
@@ -324,6 +337,7 @@
           <div class="m-detail-row"><span class="m-detail-label">订单号</span><span class="m-detail-val mono">{{ current.order_no }}</span></div>
           <div class="m-detail-row"><span class="m-detail-label">状态</span><span :class="['m-detail-tag', current.status === 'active' ? 'tag-active' : 'tag-ended']">{{ current.status === 'active' ? '合作中' : '已结束' }}</span></div>
           <div class="m-detail-row"><span class="m-detail-label">归属</span><span class="m-detail-val">{{ current.owner_name || '-' }}</span></div>
+          <div class="m-detail-row"><span class="m-detail-label">设备编号</span><span class="m-detail-val mono">{{ current.device_no || '-' }}</span></div>
         </div>
         <div class="m-detail-section">
           <div class="m-detail-title">签约信息</div>
@@ -405,7 +419,7 @@ function emptyOrder() {
   return {
     party_a: '佛山翼嘉通讯设备有限公司', party_b: '广东天耘科技有限公司', tech_provider: '天耘科技', bandwidth: '', monthly_rent: 0,
     cooperation_period: '', cooperation_date: '', actual_user: '', handler: '',
-    contact_phone: '', install_address: '', country: '', next_payment_date: '', owner_id: null, status: 'active'
+    contact_phone: '', install_address: '', country: '', next_payment_date: '', device_no: '', owner_id: null, status: 'active'
   }
 }
 function emptyConv() {

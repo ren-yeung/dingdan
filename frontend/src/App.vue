@@ -258,5 +258,12 @@ body {
   .m-empty .ic { font-size: 40px; opacity: .45; }
   .m-empty .ic img { width: 40px; height: 40px; display: inline-block; }
   .m-empty .tx { font-size: 13px; margin-top: 10px; }
+
+  /* 移动端弹窗：近全屏 + 单列表单（转单/新建/编辑共用桌面表单自动单列） */
+  .el-dialog { width: 92% !important; margin: 5vh auto !important; }
+  .el-dialog__body { padding: 14px 16px; }
+  .el-dialog .el-row { display: block; }
+  .el-dialog .el-col { width: 100% !important; max-width: 100%; flex: none; }
+  .el-dialog .el-form-item { margin-bottom: 16px; }
 }
 </style>
