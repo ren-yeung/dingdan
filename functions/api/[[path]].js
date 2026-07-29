@@ -512,7 +512,7 @@ app.post('/cron/check-payments', async (c) => {
     const resp = await fetch('https://www.pushplus.plus/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, title: '📅 订单付款提醒（7天内）', content, template: 'html' })
+      body: JSON.stringify({ token, title: `翼嘉ERP：未来7天有 ${rows.length} 单待付款`, content, template: 'html' })
     })
     if (!resp.ok) return c.json({ ok: false, error: 'PushPlus 推送失败 ' + resp.status, detail: await resp.text() }, 502)
     return c.json({ ok: true, sent: rows.length })
