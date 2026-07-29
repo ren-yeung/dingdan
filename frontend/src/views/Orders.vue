@@ -490,10 +490,10 @@ function onPickOpp(id) {
 async function submitConvert() {
   if (!selectedOppId.value) { ElMessage.warning('请选择商机'); return }
   if (!convForm.value.cooperation_date) { ElMessage.warning('请填写合作日期'); return }
-  const payload = { ...convForm.value }
+  const payload = { ...convForm.value, opportunity_id: selectedOppId.value }
   saving.value = true
   try {
-    await api.post('/orders/convert/' + selectedOppId.value, payload)
+    await api.post('/orders/convert', payload)
     ElMessage.success('已转为正式订单')
     convVisible.value = false
     load()
