@@ -493,10 +493,10 @@ app.post('/cron/check-payments', async (c) => {
       SELECT o.order_no, o.actual_user, o.party_a, o.bandwidth, o.monthly_rent, o.next_payment_date, u.name AS owner_name
       FROM orders o LEFT JOIN users u ON u.id = o.owner_id
       WHERE o.status = 'active' AND o.next_payment_date IS NOT NULL
-        AND date(o.next_payment_date) BETWEEN date('now','+8 hours') AND date('now','+8 hours','+7 days')
+        AND date(o.next_payment_date) BETWEEN date('now','+8 hours','-15 days') AND date('now','+8 hours','+15 days')
       ORDER BY o.next_payment_date ASC
     `)
-    if (!rows.length) return c.json({ ok: true, sent: 0 })
+    const title = rows.length ? `翼嘉ERP：有 ${rows.length} 单待付款` : '翼嘉ERP：暂无待付款订单'
 
     const today = new Date()
     const items = rows.map(r => {
@@ -505,14 +505,16 @@ app.post('/cron/check-payments', async (c) => {
       const state = days === 0 ? '今天到期' : (days > 0 ? `还有 ${days} 天` : `已逾期 ${-days} 天`)
       return `<tr><td>${r.order_no}</td><td>${r.actual_user || r.party_a || '-'}</td><td>${r.owner_name || '-'}</td><td>${r.next_payment_date}</td><td>${state}</td><td>¥${Number(r.monthly_rent || 0).toLocaleString()}</td></tr>`
     }).join('')
-    const content = `<h3>未来7天内待付款订单（共 ${rows.length} 单）</h3>
+    const content = rows.length
+      ? `<h3>下个付款日前后15天内待付款订单（共 ${rows.length} 单）</h3>
 <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-size:13px">
 <thead><tr><th>订单号</th><th>客户</th><th>归属</th><th>下个付款日</th><th>状态</th><th>月租</th></tr></thead>
 <tbody>${items}</tbody></table>`
+      : `<p>当前没有下个付款日落在前后15天内的待付款订单，无需处理。</p>`
     const resp = await fetch('https://www.pushplus.plus/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, title: `翼嘉ERP：未来7天有 ${rows.length} 单待付款`, content, template: 'html' })
+      body: JSON.stringify({ token, title, content, template: 'html' })
     })
     if (!resp.ok) return c.json({ ok: false, error: 'PushPlus 推送失败 ' + resp.status, detail: await resp.text() }, 502)
     return c.json({ ok: true, sent: rows.length })
