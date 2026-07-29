@@ -31,6 +31,10 @@ Thumbs.db
 # 前端构建产物（由部署时 build 命令重新生成）
 frontend/dist/
 
+# Cloudflare Pages 本地运行生成的 worker 打包产物（非源码）
+_prod_js.js
+_worker.js
+
 # 编辑器/IDE
 .vscode/
 .idea/
