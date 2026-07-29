@@ -424,7 +424,7 @@ async function submitReview() {
 .opp-form .el-form-item { margin-bottom: 18px; }
 
 /* ====== 移动端商机详情弹窗（与订单详情同款卡片分组） ====== */
-.m-detail { padding-bottom: 4px; }
+.m-detail { padding: 14px 2px 4px; }
 .m-detail-section { margin-bottom: 16px; }
 .m-detail-section:last-child { margin-bottom: 0; }
 .m-detail-head {
