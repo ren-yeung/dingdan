@@ -32,7 +32,7 @@
             <span class="order-no">{{ row.order_no }}</span>
             <span class="order-user">{{ row.actual_user }}</span>
           </div>
-          <div class="order-sub">{{ row.handler }} · {{ row.contact_phone }}</div>
+          <div class="order-sub">{{ row.handler }} · {{ row.contact_phone }} · 设备：{{ row.device_no || '无' }}</div>
           <div class="col-light">甲方：{{ row.party_a || '—' }} / 乙方：{{ row.party_b || '—' }}</div>
         </template>
       </el-table-column>
