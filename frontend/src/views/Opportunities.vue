@@ -79,7 +79,7 @@
     </div>
     <template v-else>
       <div v-if="list.length === 0" class="m-empty">
-        <div class="ic"><el-icon><Opportunity /></el-icon></div>
+        <div class="ic"><img class="m-empty-img" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23909' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18h6'/%3E%3Cpath d='M10 21h4'/%3E%3Cpath d='M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z'/%3E%3C/svg%3E"/></div>
         <div class="tx">暂无商机</div>
       </div>
       <div v-for="row in list" :key="row.id" class="m-card m-tappable" @click="openDetail(row)">
