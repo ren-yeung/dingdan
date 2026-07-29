@@ -335,7 +335,8 @@ app.get('/dashboard', async (c) => {
   // 5 个查询并行执行 + 聚合下沉到 SQL，避免串行与全表拉取
   const [agg, oppCount, ranking, recentOrders, recentOpp] = await Promise.all([
     // 本月总业绩：客户季付，按当月成交订单月租 ×3 核算（季付总额）
-    get(db, "SELECT COALESCE(SUM(monthly_rent),0)*3 AS total_performance, COUNT(*) AS total_orders FROM orders WHERE cooperation_date IS NOT NULL AND cooperation_date LIKE ?", [like]),
+    // 月度口径：按订单提交时间 created_at 归集（测试转正式/新建均自动写入提交时间）
+    get(db, "SELECT COALESCE(SUM(monthly_rent),0)*3 AS total_performance, COUNT(*) AS total_orders FROM orders WHERE created_at IS NOT NULL AND created_at LIKE ?", [like]),
     get(db, "SELECT COUNT(*) AS c FROM opportunities WHERE created_at LIKE ?", [like]),
     // 历史销售排行：全部销售 + 销售主管的订单，按单量（order_count）排行，不限定月份
     // 业绩口径：每单 = (订单开始→下个付款日 的月数) × 月租，按月累加（客户季付，月数≈3）
