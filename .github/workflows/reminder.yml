@@ -12,6 +12,7 @@ jobs:
     steps:
       - name: 调用付款提醒接口
         run: |
-          curl -s -X POST "${{ secrets.REMINDER_URL }}" \
+          curl -f -s -X POST "${{ secrets.REMINDER_URL }}" \
             -H "Authorization: Bearer ${{ secrets.REMINDER_SECRET }}" \
-            -H "Content-Type: application/json"
+            -H "Content-Type: application/json" \
+            -w "\n[HTTP %{http_code}]\n"
