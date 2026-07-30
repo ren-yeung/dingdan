@@ -2,8 +2,9 @@ name: 订单付款提醒推送
 
 on:
   schedule:
-    # UTC 02:00 = 北京时间 10:00，每天推送一次（前后15天待付款 / 暂无待付款）
-    - cron: '0 2 * * *'
+    # 北京时间每天 10:07 推送；非整点以规避 GitHub 整点高负载丢弃 scheduled 作业
+    - cron: '7 10 * * *'
+      timezone: 'Asia/Shanghai'
   workflow_dispatch: {}   # 支持在 Actions 页手动触发测试
 
 jobs:
